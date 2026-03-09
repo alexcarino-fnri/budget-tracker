@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h4 class="mb-0 fw-bold text-danger">Delete Pay Cycle</h4>
+                </div>
+                <div class="card-body p-4 text-center">
+                    <p class="mb-4">Are you sure you want to delete the pay cycle <strong>"{{ object.name }}"</strong>?</p>
+                    <p class="text-muted small mb-4">This will also affect any transactions linked to this cycle.</p>
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-danger py-2 fw-bold">Confirm Delete</button>
+                            <a href="{% url 'pay_cycle_list' %}" class="btn btn-light py-2">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

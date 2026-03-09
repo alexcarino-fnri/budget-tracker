@@ -56,17 +56,21 @@
                     <p class="text-muted mb-0 small">Sign in to manage your budget</p>
                 </div>
                 <div class="card-body">
+                    {% if form.errors %}
+                        <div class="alert alert-danger small">
+                            Your username and password didn't match. Please try again.
+                        </div>
+                    {% endif %}
                     <form method="post">
                         {% csrf_token %}
-                        {% for field in form %}
                         <div class="mb-3">
-                            <label for="{{ field.id_for_label }}" class="form-label fw-medium">{{ field.label }}</label>
-                            {{ field }}
-                            {% if field.errors %}
-                                <div class="text-danger small mt-1">{{ field.errors.0 }}</div>
-                            {% endif %}
+                            <label for="id_username" class="form-label fw-medium">Username</label>
+                            <input type="text" name="username" autofocus maxlength="150" required id="id_username" class="form-control">
                         </div>
-                        {% endfor %}
+                        <div class="mb-3">
+                            <label for="id_password" class="form-label fw-medium">Password</label>
+                            <input type="password" name="password" required id="id_password" class="form-control">
+                        </div>
                         <div class="d-grid gap-2 mt-4">
                             <button type="submit" class="btn btn-primary">Sign In</button>
                         </div>

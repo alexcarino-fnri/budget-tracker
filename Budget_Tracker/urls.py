@@ -17,7 +17,8 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from Budget_Track.views import (
-    DashboardView, SignUpView, 
+    DashboardView, SignUpView, ProfileView,
+    PayCycleListView, PayCycleCreateView, PayCycleUpdateView, PayCycleDeleteView,
     TransactionListView, TransactionCreateView, TransactionUpdateView, TransactionDeleteView, TransactionAddAjaxView,
     CategoryListView, CategoryCreateView, CategoryUpdateView, CategoryDeleteView,
     BudgetGoalListView, BudgetGoalCreateView, BudgetGoalUpdateView, BudgetGoalDeleteView
@@ -28,8 +29,18 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),
     path('signup/', SignUpView.as_view(), name='signup'),
+    path('profile/', ProfileView.as_view(), name='profile'),
     path('dashboard/', DashboardView.as_view(), name='dashboard'),
     
+    # PWA
+    path('', include('pwa.urls')),
+    
+    # Pay Cycles
+    path('pay-cycles/', PayCycleListView.as_view(), name='pay_cycle_list'),
+    path('pay-cycles/add/', PayCycleCreateView.as_view(), name='pay_cycle_add'),
+    path('pay-cycles/<int:pk>/edit/', PayCycleUpdateView.as_view(), name='pay_cycle_edit'),
+    path('pay-cycles/<int:pk>/delete/', PayCycleDeleteView.as_view(), name='pay_cycle_delete'),
+
     # Transactions
     path('transactions/', TransactionListView.as_view(), name='transaction_list'),
     path('transactions/add/', TransactionCreateView.as_view(), name='transaction_add'),

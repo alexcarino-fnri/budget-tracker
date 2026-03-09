@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile - FinTrack{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 p-4 pb-0">
+                    <h4 class="fw-bold mb-0">Profile Settings</h4>
+                    <p class="text-muted small">Manage your account and preferences</p>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <h6 class="fw-bold text-uppercase small text-secondary mb-3">Account Information</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-medium">First Name</label>
+                                {{ user_form.first_name }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-medium">Last Name</label>
+                                {{ user_form.last_name }}
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-medium">Email Address</label>
+                                {{ user_form.email }}
+                            </div>
+                        </div>
+
+                        <h6 class="fw-bold text-uppercase small text-secondary mb-3">Preferences</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-medium">Monthly Income Goal</label>
+                                {{ profile_form.monthly_income_goal }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-medium">Currency Symbol</label>
+                                {{ profile_form.currency_symbol }}
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <button type="submit" class="btn btn-primary px-5">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

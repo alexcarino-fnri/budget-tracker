@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Budget Tracker{% endblock %}</title>
+    <title>{% block title %}FinTrack{% endblock %}</title>
 
     <!-- Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -22,23 +22,23 @@
     <style>
         :root {
             --bg-body: #f8f9fa;
-            --bg-sidebar: #ffffff;
-            --text-primary: #1e293b;
-            --text-secondary: #64748b;
-            --accent-primary: #10b981; /* Emerald Green */
-            --accent-secondary: #3b82f6; /* Blue */
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --border-color: #e2e8f0;
-            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            --sidebar-width: 250px;
+            --bg-sidebar: #111827; /* Darker Sidebar */
+            --sidebar-text: #9ca3af;
+            --sidebar-active: #ffffff;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --accent-primary: #6366f1; /* Modern Indigo */
+            --accent-light: rgba(99, 102, 241, 0.1);
+            --border-color: #e5e7eb;
+            --sidebar-width: 260px;
+            --transition: all 0.2s ease;
         }
 
         body {
             font-family: 'Inter', sans-serif;
             background-color: var(--bg-body);
             color: var(--text-primary);
-            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
         }
 
         /* Sidebar */
@@ -49,7 +49,6 @@
             top: 0;
             left: 0;
             background-color: var(--bg-sidebar);
-            border-right: 1px solid var(--border-color);
             padding: 1.5rem;
             display: flex;
             flex-direction: column;
@@ -57,188 +56,128 @@
         }
 
         .sidebar-brand {
-            font-size: 1.5rem;
+            font-size: 1.25rem;
             font-weight: 700;
-            color: var(--text-primary);
+            color: white;
             margin-bottom: 2rem;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.75rem;
+            text-decoration: none;
+            padding-left: 0.75rem;
         }
 
-        .sidebar-brand i {
-            color: var(--accent-primary);
-        }
+        .sidebar-brand i { color: var(--accent-primary); }
 
         .nav-link {
-            color: var(--text-secondary);
+            color: var(--sidebar-text);
             font-weight: 500;
             padding: 0.75rem 1rem;
             border-radius: 0.5rem;
-            margin-bottom: 0.5rem;
-            transition: all 0.2s ease;
+            margin-bottom: 0.25rem;
+            transition: var(--transition);
             display: flex;
             align-items: center;
             gap: 0.75rem;
+            text-decoration: none;
         }
 
-        .nav-link:hover, .nav-link.active {
-            background-color: #f1f5f9;
+        .nav-link:hover {
+            color: white;
+            background-color: rgba(255,255,255,0.05);
+        }
+
+        .nav-link.active {
+            background-color: var(--accent-primary);
+            color: white;
+        }
+
+        .nav-link i { width: 20px; text-align: center; }
+
+        /* Topbar */
+        .topbar {
+            margin-left: var(--sidebar-width);
+            height: 64px;
+            background: white;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 900;
+        }
+
+        .page-title { font-weight: 600; font-size: 1.1rem; margin-bottom: 0; }
+
+        .topbar-actions { display: flex; align-items: center; gap: 1.5rem; }
+
+        .notification-bell {
+            position: relative;
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .notification-bell:hover { color: var(--accent-primary); }
+
+        .notification-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 8px;
+            height: 8px;
+            background-color: #ef4444;
+            border-radius: 50%;
+            border: 2px solid white;
+        }
+
+        .user-profile-mini {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding-left: 1.5rem;
+            border-left: 1px solid var(--border-color);
+        }
+
+        .avatar-circle {
+            width: 32px;
+            height: 32px;
+            background-color: var(--accent-light);
             color: var(--accent-primary);
-        }
-
-        .nav-link i {
-            width: 20px;
-            text-align: center;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.8rem;
         }
 
         /* Main Content */
         .main-content {
             margin-left: var(--sidebar-width);
             padding: 2rem;
+            min-height: calc(100vh - 64px);
         }
 
-        /* Cards */
-        .stat-card {
+        /* Modern Cards */
+        .card {
             background: white;
-            border-radius: 1rem;
-            padding: 1.5rem;
-            box-shadow: var(--card-shadow);
+            border-radius: 0.75rem;
             border: 1px solid var(--border-color);
-            transition: transform 0.2s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-2px);
-        }
-
-        .stat-label {
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-            font-weight: 500;
-            margin-bottom: 0.5rem;
-        }
-
-        .stat-value {
-            font-size: 1.75rem;
-            font-weight: 700;
-            color: var(--text-primary);
-        }
-
-        .stat-desc {
-            font-size: 0.75rem;
-            margin-top: 0.5rem;
-        }
-
-        /* Tables */
-        .table-card {
-            background: white;
-            border-radius: 1rem;
-            box-shadow: var(--card-shadow);
-            border: 1px solid var(--border-color);
-            overflow: hidden;
-        }
-
-        .table-header {
-            padding: 1.5rem;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .table {
-            margin-bottom: 0;
-        }
-
-        .table th {
-            background-color: #f8fafc;
-            font-weight: 600;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            font-size: 0.75rem;
-            letter-spacing: 0.05em;
-            border-bottom: 1px solid var(--border-color);
-            padding: 1rem 1.5rem;
-        }
-
-        .table td {
-            padding: 1rem 1.5rem;
-            vertical-align: middle;
-            color: var(--text-primary);
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .table tr:last-child td {
-            border-bottom: none;
-        }
-
-        .table tr:hover {
-            background-color: #f8fafc;
-        }
-
-        /* Badges */
-        .badge-pill {
-            padding: 0.35em 0.8em;
-            border-radius: 50rem;
-            font-weight: 600;
-            font-size: 0.75rem;
-        }
-
-        .badge-success {
-            background-color: #d1fae5;
-            color: #065f46;
-        }
-
-        .badge-warning {
-            background-color: #fef3c7;
-            color: #92400e;
-        }
-
-        .badge-danger {
-            background-color: #fee2e2;
-            color: #991b1b;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
 
         /* Buttons */
-        .btn-primary {
-            background-color: var(--accent-primary);
-            border-color: var(--accent-primary);
-            border-radius: 0.5rem;
-            padding: 0.6rem 1.2rem;
-            font-weight: 500;
-        }
+        .btn { border-radius: 0.5rem; font-weight: 500; padding: 0.5rem 1rem; }
+        .btn-primary { background-color: var(--accent-primary); border-color: var(--accent-primary); }
+        .btn-primary:hover { background-color: #4f46e5; border-color: #4f46e5; }
 
-        .btn-primary:hover {
-            background-color: #059669;
-            border-color: #059669;
-        }
-
-        .btn-fab {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            width: 3.5rem;
-            height: 3.5rem;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            z-index: 900;
-        }
-
-        /* Utilities */
-        .text-emerald { color: var(--accent-primary); }
-        .text-slate { color: var(--text-secondary); }
-
-        /* Toast */
-        .toast-container {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            z-index: 1100;
+        @media (max-width: 992px) {
+            .sidebar { transform: translateX(-100%); }
+            .main-content, .topbar { margin-left: 0; }
         }
     </style>
     {% block extra_css %}{% endblock %}
@@ -247,16 +186,19 @@
 
     <!-- Sidebar -->
     <nav class="sidebar">
-        <div class="sidebar-brand">
-            <i class="fas fa-wallet"></i>
+        <a href="{% url 'dashboard' %}" class="sidebar-brand">
+            <i class="fas fa-bolt"></i>
             <span>FinTrack</span>
-        </div>
+        </a>
         <div class="nav flex-column">
             <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
                 <i class="fas fa-home"></i> Dashboard
             </a>
+            <a href="{% url 'pay_cycle_list' %}" class="nav-link {% if 'pay_cycle' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="fas fa-calendar"></i> Pay Cycles
+            </a>
             <a href="{% url 'transaction_list' %}" class="nav-link {% if request.resolver_match.url_name == 'transaction_list' %}active{% endif %}">
-                <i class="fas fa-list"></i> Transactions
+                <i class="fas fa-exchange-alt"></i> Transactions
             </a>
             <a href="{% url 'category_list' %}" class="nav-link {% if request.resolver_match.url_name == 'category_list' %}active{% endif %}">
                 <i class="fas fa-tags"></i> Categories
@@ -266,6 +208,9 @@
             </a>
         </div>
         <div class="mt-auto">
+            <a href="{% url 'profile' %}" class="nav-link {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+                <i class="fas fa-cog"></i> Settings
+            </a>
             <form action="{% url 'logout' %}" method="post">
                 {% csrf_token %}
                 <button type="submit" class="nav-link w-100 text-start border-0 bg-transparent text-danger">
@@ -275,21 +220,74 @@
         </div>
     </nav>
 
+    <!-- Topbar -->
+    <header class="topbar">
+        <h1 class="page-title">{% block page_title %}Overview{% endblock %}</h1>
+
+        <div class="topbar-actions">
+            <!-- Notification Bell -->
+            <div class="dropdown">
+                <div class="notification-bell" id="notifDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="far fa-bell"></i>
+                    {% if overdue_bills or upcoming_bills %}
+                        <span class="notification-badge"></span>
+                    {% endif %}
+                </div>
+                <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg p-3 mt-3" aria-labelledby="notifDropdown" style="width: 320px;">
+                    <h6 class="fw-bold mb-3">Notifications</h6>
+                    {% if overdue_bills or upcoming_bills %}
+                        {% for bill in overdue_bills %}
+                        <li class="mb-2">
+                            <div class="d-flex align-items-start p-2 rounded bg-danger bg-opacity-10">
+                                <i class="fas fa-exclamation-circle text-danger mt-1 me-2"></i>
+                                <div>
+                                    <p class="mb-0 small fw-bold text-danger">Overdue Bill</p>
+                                    <p class="mb-0 smaller text-muted">{{ bill.description }} was due on {{ bill.due_date|date:"M d" }}</p>
+                                </div>
+                            </div>
+                        </li>
+                        {% endfor %}
+                        {% for bill in upcoming_bills %}
+                        <li class="mb-2">
+                            <div class="d-flex align-items-start p-2 rounded bg-warning bg-opacity-10">
+                                <i class="fas fa-clock text-warning mt-1 me-2"></i>
+                                <div>
+                                    <p class="mb-0 small fw-bold text-warning">Upcoming Bill</p>
+                                    <p class="mb-0 smaller text-muted">{{ bill.description }} due on {{ bill.due_date|date:"M d" }}</p>
+                                </div>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    {% else %}
+                        <li class="text-center py-3 text-muted small">No new notifications</li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            <!-- User Profile Mini -->
+            <div class="user-profile-mini">
+                <div class="text-end d-none d-sm-block">
+                    <p class="mb-0 fw-bold small">{{ user.username }}</p>
+                    <p class="mb-0 text-muted smaller">Pro Plan</p>
+                </div>
+                <div class="avatar-circle">
+                    {{ user.username|slice:":1"|upper }}
+                </div>
+            </div>
+        </div>
+    </header>
+
     <!-- Main Content -->
     <main class="main-content">
         {% block content %}{% endblock %}
     </main>
 
     <!-- Toast Container -->
-    <div class="toast-container">
-        <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-            <div class="toast-header">
-                <i class="fas fa-check-circle text-success me-2"></i>
-                <strong class="me-auto">Notification</strong>
-                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-            <div class="toast-body" id="toastMessage">
-                Action successful.
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="liveToast" class="toast border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex align-items-center p-2">
+                <div class="toast-body" id="toastMessage">Action successful.</div>
+                <button type="button" class="btn-close ms-auto me-2" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
         </div>
     </div>

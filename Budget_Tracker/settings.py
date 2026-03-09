@@ -27,7 +27,8 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-$ignx4i3&o@ig4$-aw1&@
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = 'RENDER' not in os.environ
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*'] # Allow all hosts for local testing
+CSRF_TRUSTED_ORIGINS = ['https://*.ngrok-free.app'] # Allow ngrok
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
@@ -43,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'Budget_Track.apps.BudgetTrackConfig',
+    'pwa',
 ]
 
 MIDDLEWARE = [
@@ -130,3 +132,42 @@ if not DEBUG:
 LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = '/accounts/login/'
+
+# Default primary key field type
+# https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# PWA Settings
+PWA_APP_NAME = 'FinTrack'
+PWA_APP_DESCRIPTION = "Modern Budget Tracker"
+PWA_THEME_COLOR = '#6366f1'
+PWA_BACKGROUND_COLOR = '#ffffff'
+PWA_DISPLAY = 'standalone'
+PWA_SCOPE = '/'
+PWA_ORIENTATION = 'portrait'
+PWA_START_URL = '/dashboard/'
+PWA_STATUS_BAR_COLOR = 'default'
+PWA_APP_ICONS = [
+    {
+        'src': '/static/images/icon-192x192.png',
+        'sizes': '192x192'
+    },
+    {
+        'src': '/static/images/icon-512x512.png',
+        'sizes': '512x512'
+    }
+]
+PWA_APP_ICONS_APPLE = [
+    {
+        'src': '/static/images/icon-192x192.png',
+        'sizes': '192x192'
+    }
+]
+PWA_APP_SPLASH_SCREEN = [
+    {
+        'src': '/static/images/icon-512x512.png',
+        'media': '(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)'
+    }
+]
+PWA_DIR = 'static'
