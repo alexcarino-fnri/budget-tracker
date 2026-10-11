@@ -1,0 +1,161 @@
+{% extends 'base/base.html' %}
+{% load humanize %}
+
+{% block title %}{{ debt.title }} | Debt Details{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div>
+        <a href="{% url 'debts:list' %}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-emerald-500 transition mb-3">
+            <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+            <span>Back to Debts</span>
+        </a>
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <div class="flex items-center gap-2">
+                    <span class="px-2 py-0.5 rounded-full text-xs font-semibold {% if debt.debt_type == 'OWED_BY_ME' %}bg-rose-50 dark:bg-rose-950 text-rose-600 dark:text-rose-400 border border-rose-200/50{% else %}bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50{% endif %}">
+                        {{ debt.get_debt_type_display }}
+                    </span>
+                    <span class="px-2 py-0.5 rounded-full text-xs font-semibold {% if summary.status == 'PAID' %}bg-emerald-50 text-emerald-600{% elif summary.status == 'OVERDUE' %}bg-rose-50 text-rose-600{% else %}bg-slate-100 dark:bg-slate-800 text-slate-500{% endif %}">
+                        {{ summary.status }}
+                    </span>
+                </div>
+                <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white mt-1">{{ debt.title }}</h1>
+                <p class="text-xs text-slate-400">
+                    {% if debt.debt_type == 'OWED_BY_ME' %}Creditor:{% else %}Debtor:{% endif %}
+                    <span class="font-semibold text-slate-700 dark:text-slate-300">{{ debt.creditor_or_debtor }}</span> &bull; Due date: {{ debt.due_date }}
+                </p>
+            </div>
+            <div class="flex items-center gap-2">
+                <a href="{% url 'debts:update' debt.pk %}" class="px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                    Edit Details
+                </a>
+                <a href="{% url 'debts:delete' debt.pk %}" class="px-4 py-2 rounded-xl border border-rose-300 dark:border-rose-900/60 text-rose-600 text-xs font-semibold hover:bg-rose-50 dark:hover:bg-rose-950/40 transition">
+                    Delete
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Balance KPI Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Remaining Balance</span>
+            <div class="mt-2 text-2xl font-bold font-mono {% if debt.debt_type == 'OWED_BY_ME' %}text-rose-600 dark:text-rose-400{% else %}text-emerald-600 dark:text-emerald-400{% endif %}">
+                {{ CURRENCY_SYMBOL }} {{ summary.remaining_balance|intcomma }}
+            </div>
+            <div class="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden mt-3">
+                <div class="h-full bg-emerald-500 rounded-full" style="width: {{ summary.percent_paid }}%;"></div>
+            </div>
+            <span class="text-[11px] text-slate-400 mt-1 block">{{ summary.percent_paid }}% paid off</span>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Paid to Date</span>
+            <div class="mt-2 text-2xl font-bold font-mono text-slate-900 dark:text-white">
+                {{ CURRENCY_SYMBOL }} {{ summary.total_paid|intcomma }}
+            </div>
+            <span class="text-xs text-slate-400 mt-1 block">Original Principal: {{ CURRENCY_SYMBOL }} {{ debt.principal|intcomma }}</span>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Terms & Frequency</span>
+            <div class="mt-2 text-lg font-bold text-slate-900 dark:text-white">
+                {{ debt.get_payment_frequency_display }}
+            </div>
+            <span class="text-xs text-slate-400 mt-1 block">Min payment: {{ CURRENCY_SYMBOL }} {{ debt.minimum_payment|intcomma }} &bull; Rate: {{ debt.interest_rate }}% APR</span>
+        </div>
+    </div>
+
+    <!-- Payment Action & History Split -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Record Payment Form -->
+        <div class="lg:col-span-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm h-fit">
+            <h2 class="text-base font-bold text-slate-900 dark:text-white mb-1">
+                {% if debt.debt_type == 'OWED_BY_ME' %}Record a Repayment{% else %}Record Collection{% endif %}
+            </h2>
+            <p class="text-xs text-slate-400 mb-5">Log an installment towards this balance.</p>
+
+            <form method="post" action="{% url 'debts:payment_add' debt.pk %}" class="space-y-4">
+                {% csrf_token %}
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Payment Amount ({{ CURRENCY_SYMBOL }})</label>
+                    {{ payment_form.amount }}
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Payment Date</label>
+                    {{ payment_form.date }}
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Notes / Reference</label>
+                    {{ payment_form.notes }}
+                </div>
+
+                <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 space-y-3">
+                    <div class="flex items-center gap-2">
+                        {{ payment_form.create_transaction }}
+                        <label for="id_create_transaction" class="text-xs font-medium text-slate-800 dark:text-slate-200">Automatically sync with Transaction & Account</label>
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-semibold uppercase text-slate-400 mb-1">Account used</label>
+                        {{ payment_form.account }}
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm shadow-md transition">
+                    Save Payment
+                </button>
+            </form>
+        </div>
+
+        <!-- Payments Log Table -->
+        <div class="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
+            <h2 class="text-base font-bold text-slate-900 dark:text-white mb-1">Payment History</h2>
+            <p class="text-xs text-slate-400 mb-4">All recorded payments and linked account transactions.</p>
+
+            {% if payments %}
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead class="text-xs uppercase text-slate-400 border-b border-slate-100 dark:border-slate-800">
+                        <tr>
+                            <th class="py-2.5 px-3">Date</th>
+                            <th class="py-2.5 px-3">Amount</th>
+                            <th class="py-2.5 px-3">Notes</th>
+                            <th class="py-2.5 px-3">Synced Transaction</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                        {% for p in payments %}
+                        <tr>
+                            <td class="py-3 px-3 text-xs font-mono text-slate-500">{{ p.date }}</td>
+                            <td class="py-3 px-3 font-mono font-bold text-emerald-600 dark:text-emerald-400">{{ CURRENCY_SYMBOL }} {{ p.amount|intcomma }}</td>
+                            <td class="py-3 px-3 text-xs text-slate-600 dark:text-slate-300">{{ p.notes|default:"-" }}</td>
+                            <td class="py-3 px-3 text-xs">
+                                {% if p.linked_transaction %}
+                                <span class="inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded-full">
+                                    <i data-lucide="check" class="w-3 h-3"></i>
+                                    <span>{{ p.linked_transaction.account.name }}</span>
+                                </span>
+                                {% else %}
+                                <span class="text-slate-400">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="py-12 text-center text-slate-400 text-xs">
+                <i data-lucide="receipt" class="w-8 h-8 mx-auto mb-2 opacity-50"></i>
+                <p>No payments recorded yet. Use the form to record the first payment.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

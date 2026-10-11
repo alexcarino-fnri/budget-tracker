@@ -1,0 +1,74 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{% if form.instance.pk %}Edit Account{% else %}Add Account{% endif %}{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto space-y-6">
+    <div>
+        <a href="{% url 'wallets:list' %}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-emerald-500 transition mb-3">
+            <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+            <span>Back to Accounts</span>
+        </a>
+        <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+            {% if form.instance.pk %}Edit Account{% else %}Add New Account{% endif %}
+        </h1>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Where your money lives (Cash, Bank, GCash, Maya, or Credit Line).</p>
+    </div>
+
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 sm:p-8 shadow-sm">
+        <form method="post" class="space-y-5">
+            {% csrf_token %}
+
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Account Name</label>
+                {{ form.name }}
+                {% if form.name.errors %}
+                    <p class="text-xs text-rose-500 mt-1">{{ form.name.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Account Type</label>
+                    {{ form.account_type }}
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Currency</label>
+                    {{ form.currency }}
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Opening Balance</label>
+                {{ form.opening_balance }}
+                <p class="text-xs text-slate-400 mt-1">Starting amount before transactions are recorded.</p>
+                {% if form.opening_balance.errors %}
+                    <p class="text-xs text-rose-500 mt-1">{{ form.opening_balance.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center pt-2">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Badge Color</label>
+                    <div class="flex items-center gap-3">
+                        {{ form.color_hex }}
+                        <span class="text-xs text-slate-400">Color badge for cards</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 pt-4">
+                    {{ form.is_active }}
+                    <label for="id_is_active" class="text-sm font-medium text-slate-700 dark:text-slate-300">Account is Active</label>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-800">
+                <a href="{% url 'wallets:list' %}" class="px-5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition">Cancel</a>
+                <button type="submit" class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold shadow-md shadow-emerald-600/20 active:scale-[0.99] transition">
+                    {% if form.instance.pk %}Update Account{% else %}Save Account{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

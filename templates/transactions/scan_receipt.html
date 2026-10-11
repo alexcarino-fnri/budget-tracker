@@ -1,0 +1,498 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Smart Receipt Scanner - PisoFlow{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <a href="{% url 'transactions:list' %}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-emerald-500 transition mb-2">
+                <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+                <span>Back to Transactions</span>
+            </a>
+            <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
+                <span class="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                    <i data-lucide="scan-line" class="w-6 h-6"></i>
+                </span>
+                Smart Receipt Scanner
+            </h1>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                Upload or photograph any transaction receipt or screenshot. PisoFlow automatically detects the amount, merchant, wallet/account, and identifies if it's a debt payment.
+            </p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <!-- Left: Upload & Scanning Panel (5 cols) -->
+        <div class="lg:col-span-5 space-y-4">
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
+                <h2 class="text-sm font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                    <i data-lucide="image" class="w-4 h-4 text-emerald-500"></i>
+                    Receipt Image
+                </h2>
+
+                <!-- Dropzone / File input -->
+                <div id="dropzone" class="relative group border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-emerald-500 dark:hover:border-emerald-500 rounded-2xl p-6 text-center cursor-pointer transition bg-slate-50/50 dark:bg-slate-800/30">
+                    <input type="file" id="receiptFileInput" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                    
+                    <div id="dropzonePlaceholder" class="space-y-3 pointer-events-none">
+                        <div class="w-14 h-14 mx-auto rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/20 shadow-sm group-hover:scale-105 transition transform">
+                            <i data-lucide="camera" class="w-7 h-7"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                                Click to upload or snap photo
+                            </p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                Supports GCash, Maya, Bank Receipts, POS slips (PNG, JPG, WEBP)
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Image Preview -->
+                    <div id="imagePreviewContainer" class="hidden relative">
+                        <img id="imagePreview" src="" alt="Receipt Preview" class="max-h-72 mx-auto rounded-xl shadow-md border border-slate-200 dark:border-slate-700 object-contain">
+                        <button type="button" id="btnRemoveImage" class="absolute top-2 right-2 p-1.5 rounded-full bg-slate-900/80 text-white hover:bg-rose-600 transition shadow">
+                            <i data-lucide="x" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Live Camera Capture Button for Mobile -->
+                <div class="flex items-center gap-2">
+                    <label for="cameraInput" class="flex-1 cursor-pointer inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition">
+                        <i data-lucide="camera" class="w-3.5 h-3.5 text-emerald-500"></i>
+                        <span>Snap with Camera</span>
+                        <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden">
+                    </label>
+                    <button type="button" id="btnManualTextToggle" class="px-3 py-2 text-xs font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition inline-flex items-center gap-1.5">
+                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                        <span>Paste Text</span>
+                    </button>
+                </div>
+
+                <!-- Textarea option for manual OCR text or digital receipt copy-paste -->
+                <div id="manualTextContainer" class="hidden space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                    <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">Paste receipt text or SMS confirmation:</label>
+                    <textarea id="manualTextInput" rows="4" placeholder="e.g. You have sent PHP 1,500.00 to BDO Loan..." class="w-full text-xs rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:ring-emerald-500 focus:border-emerald-500 p-2.5"></textarea>
+                    <button type="button" id="btnAnalyzeText" class="w-full py-2 px-3 text-xs font-semibold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white transition flex items-center justify-center gap-1.5">
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                        <span>Analyze Text</span>
+                    </button>
+                </div>
+
+                <!-- OCR Scanning Progress -->
+                <div id="ocrProgressCard" class="hidden p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-500/20 space-y-2.5">
+                    <div class="flex items-center justify-between text-xs">
+                        <span id="ocrStatusText" class="font-medium text-emerald-700 dark:text-emerald-300 flex items-center gap-1.5">
+                            <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                            Initializing OCR engine...
+                        </span>
+                        <span id="ocrPercentText" class="font-bold text-emerald-700 dark:text-emerald-300">0%</span>
+                    </div>
+                    <div class="w-full bg-emerald-200 dark:bg-emerald-900 rounded-full h-1.5 overflow-hidden">
+                        <div id="ocrProgressBar" class="bg-emerald-600 h-1.5 rounded-full transition-all duration-200" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Verification & Confirmation Form (7 cols) -->
+        <div class="lg:col-span-7 space-y-4">
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 sm:p-7 shadow-sm">
+                <!-- Identified Debt Banner (Dynamic) -->
+                <div id="debtAlertBanner" class="hidden mb-5 p-4 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 space-y-1">
+                    <div class="flex items-center gap-2 font-bold text-sm">
+                        <i data-lucide="alert-circle" class="w-4 h-4 text-amber-600 dark:text-amber-400"></i>
+                        <span>Debt Payment Detected!</span>
+                    </div>
+                    <p class="text-xs" id="debtAlertText">
+                        This receipt appears to be a payment for your debt. We've automatically linked it so your debt balance will decrease upon saving.
+                    </p>
+                </div>
+
+                <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <span>Transaction Verification</span>
+                            <span id="autoDetectedBadge" class="hidden text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-500/20">
+                                Auto-Extracted
+                            </span>
+                        </h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Review or adjust the extracted details before recording.</p>
+                    </div>
+                </div>
+
+                <form id="recordReceiptForm" method="post" action="{% url 'transactions:process_scanned_receipt' %}" enctype="multipart/form-data" class="space-y-4">
+                    {% csrf_token %}
+                    <!-- Hidden input to hold uploaded receipt file reference -->
+                    <input type="file" id="hiddenReceiptFileInput" name="receipt_image" class="hidden">
+
+                    <!-- Amount & Date -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+                                Amount
+                            </label>
+                            <div class="relative">
+                                <span id="currencySymbolPrefix" class="absolute left-3.5 top-2.5 text-sm font-bold text-slate-400">₱</span>
+                                <input type="number" step="0.01" min="0.01" id="fieldAmount" name="amount" required placeholder="0.00"
+                                    class="w-full pl-8 pr-3 py-2 text-sm font-semibold rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-emerald-500 focus:border-emerald-500">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+                                Transaction Date
+                            </label>
+                            <input type="date" id="fieldDate" name="date" required
+                                class="w-full px-3 py-2 text-sm rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-emerald-500 focus:border-emerald-500">
+                        </div>
+                    </div>
+
+                    <!-- Description / Merchant -->
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+                            Description / Merchant
+                        </label>
+                        <input type="text" id="fieldDescription" name="description" required placeholder="e.g. Jollibee, Shopee, Meralco Bill"
+                            class="w-full px-3 py-2 text-sm rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-emerald-500 focus:border-emerald-500">
+                    </div>
+
+                    <!-- Account / Wallet & Category -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5 flex items-center justify-between">
+                                <span>Wallet / Account</span>
+                                <span id="accountMatchedPill" class="hidden text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">Matched ✓</span>
+                            </label>
+                            <select id="fieldAccount" name="account_id" required
+                                class="w-full px-3 py-2 text-sm rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-emerald-500 focus:border-emerald-500">
+                                {% for acc in accounts %}
+                                    <option value="{{ acc.pk }}" data-currency="{{ acc.currency_symbol }}" {% if forloop.first %}selected{% endif %}>
+                                        {{ acc.name }} ({{ acc.currency_symbol }} {{ acc.current_balance }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5 flex items-center justify-between">
+                                <span>Category</span>
+                                <span id="categoryMatchedPill" class="hidden text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">Matched ✓</span>
+                            </label>
+                            <select id="fieldCategory" name="category_id"
+                                class="w-full px-3 py-2 text-sm rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-emerald-500 focus:border-emerald-500">
+                                <option value="">-- No Category --</option>
+                                {% for cat in categories %}
+                                    <option value="{{ cat.pk }}">
+                                        {{ cat.icon|default:'📁' }} {{ cat.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Transaction Type -->
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+                            Transaction Type
+                        </label>
+                        <select id="fieldTransactionType" name="transaction_type"
+                            class="w-full px-3 py-2 text-sm rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-emerald-500 focus:border-emerald-500">
+                            <option value="EXPENSE" selected>Expense (Outgoing Money)</option>
+                            <option value="INCOME">Income (Incoming Money)</option>
+                        </select>
+                    </div>
+
+                    <!-- DEBT PAYMENT SECTION (Highlights & automatically links) -->
+                    <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <label for="checkIsDebtPayment" class="flex items-center gap-2.5 cursor-pointer">
+                                <input type="checkbox" id="checkIsDebtPayment" name="is_debt_payment" value="true"
+                                    class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300 dark:border-slate-700 dark:bg-slate-900">
+                                <span class="text-xs font-bold text-slate-800 dark:text-slate-200">
+                                    This receipt is for payment of a Debt / Loan
+                                </span>
+                            </label>
+                            <span class="text-[10px] text-slate-500 dark:text-slate-400">Updates debt balance</span>
+                        </div>
+
+                        <div id="debtSelectorGroup" class="hidden pt-2 border-t border-slate-200/60 dark:border-slate-700/60 space-y-1.5">
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                                Select Active Debt to Credit:
+                            </label>
+                            <select id="fieldDebtId" name="debt_id"
+                                class="w-full px-3 py-2 text-xs rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-emerald-500 focus:border-emerald-500">
+                                <option value="">-- Choose Debt --</option>
+                                {% for debt in active_debts %}
+                                    <option value="{{ debt.pk }}">
+                                        {{ debt.title }} ({{ debt.creditor_or_debtor }}) - Balance: {{ debt.currency_symbol }} {{ debt.current_balance }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Notes -->
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+                            Notes / OCR Summary
+                        </label>
+                        <textarea id="fieldNotes" name="notes" rows="2" placeholder="Optional notes or OCR reference"
+                            class="w-full px-3 py-2 text-xs rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-emerald-500 focus:border-emerald-500"></textarea>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="pt-2">
+                        <button type="submit" id="btnSubmitReceipt" class="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition shadow-sm hover:shadow flex items-center justify-center gap-2">
+                            <i data-lucide="check-circle" class="w-4 h-4"></i>
+                            <span>Record Transaction & Update Balance</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Include Tesseract.js from CDN for fast client-side OCR -->
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('receiptFileInput');
+    const cameraInput = document.getElementById('cameraInput');
+    const dropzone = document.getElementById('dropzone');
+    const dropzonePlaceholder = document.getElementById('dropzonePlaceholder');
+    const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+    const imagePreview = document.getElementById('imagePreview');
+    const btnRemoveImage = document.getElementById('btnRemoveImage');
+    const hiddenReceiptFileInput = document.getElementById('hiddenReceiptFileInput');
+
+    // Progress card
+    const ocrProgressCard = document.getElementById('ocrProgressCard');
+    const ocrStatusText = document.getElementById('ocrStatusText');
+    const ocrPercentText = document.getElementById('ocrPercentText');
+    const ocrProgressBar = document.getElementById('ocrProgressBar');
+
+    // Text inputs
+    const btnManualTextToggle = document.getElementById('btnManualTextToggle');
+    const manualTextContainer = document.getElementById('manualTextContainer');
+    const manualTextInput = document.getElementById('manualTextInput');
+    const btnAnalyzeText = document.getElementById('btnAnalyzeText');
+
+    // Fields
+    const fieldAmount = document.getElementById('fieldAmount');
+    const fieldDate = document.getElementById('fieldDate');
+    const fieldDescription = document.getElementById('fieldDescription');
+    const fieldAccount = document.getElementById('fieldAccount');
+    const fieldCategory = document.getElementById('fieldCategory');
+    const fieldNotes = document.getElementById('fieldNotes');
+    const checkIsDebtPayment = document.getElementById('checkIsDebtPayment');
+    const debtSelectorGroup = document.getElementById('debtSelectorGroup');
+    const fieldDebtId = document.getElementById('fieldDebtId');
+    const debtAlertBanner = document.getElementById('debtAlertBanner');
+    const debtAlertText = document.getElementById('debtAlertText');
+    const autoDetectedBadge = document.getElementById('autoDetectedBadge');
+    const accountMatchedPill = document.getElementById('accountMatchedPill');
+    const categoryMatchedPill = document.getElementById('categoryMatchedPill');
+    const currencySymbolPrefix = document.getElementById('currencySymbolPrefix');
+
+    // Default date to today
+    fieldDate.value = new Date().toISOString().split('T')[0];
+
+    // Currency symbol sync
+    function updateCurrencySymbol() {
+        const selectedOpt = fieldAccount.options[fieldAccount.selectedIndex];
+        if (selectedOpt && selectedOpt.dataset.currency) {
+            currencySymbolPrefix.textContent = selectedOpt.dataset.currency;
+        }
+    }
+    fieldAccount.addEventListener('change', updateCurrencySymbol);
+    updateCurrencySymbol();
+
+    // Debt checkbox toggle
+    checkIsDebtPayment.addEventListener('change', function() {
+        if (this.checked) {
+            debtSelectorGroup.classList.remove('hidden');
+        } else {
+            debtSelectorGroup.classList.add('hidden');
+        }
+    });
+
+    // Toggle manual text container
+    btnManualTextToggle.addEventListener('click', function() {
+        manualTextContainer.classList.toggle('hidden');
+        if (!manualTextContainer.classList.contains('hidden')) {
+            manualTextInput.focus();
+        }
+    });
+
+    // File selected handler
+    function handleFileSelected(file) {
+        if (!file) return;
+
+        // Sync file to the actual hidden form input for submission
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        hiddenReceiptFileInput.files = dataTransfer.files;
+
+        // Show image preview
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            imagePreview.src = e.target.result;
+            dropzonePlaceholder.classList.add('hidden');
+            imagePreviewContainer.classList.remove('hidden');
+
+            // Begin OCR
+            runOCR(file);
+        };
+        reader.readAsDataURL(file);
+    }
+
+    fileInput.addEventListener('change', (e) => handleFileSelected(e.target.files[0]));
+    cameraInput.addEventListener('change', (e) => handleFileSelected(e.target.files[0]));
+
+    btnRemoveImage.addEventListener('click', function(e) {
+        e.stopPropagation();
+        fileInput.value = '';
+        cameraInput.value = '';
+        hiddenReceiptFileInput.value = '';
+        imagePreview.src = '';
+        imagePreviewContainer.classList.add('hidden');
+        dropzonePlaceholder.classList.remove('hidden');
+        ocrProgressCard.classList.add('hidden');
+    });
+
+    // Manual text analyze
+    btnAnalyzeText.addEventListener('click', function() {
+        const text = manualTextInput.value.trim();
+        if (!text) return;
+        sendTextForAnalysis(text);
+    });
+
+    // Run Tesseract.js OCR
+    async function runOCR(file) {
+        ocrProgressCard.classList.remove('hidden');
+        ocrStatusText.textContent = 'Scanning image with OCR...';
+        ocrPercentText.textContent = '0%';
+        ocrProgressBar.style.width = '0%';
+
+        try {
+            const worker = await Tesseract.createWorker('eng');
+            
+            // Set logger for progress
+            const ret = await worker.recognize(file);
+            const text = ret.data.text;
+            await worker.terminate();
+
+            ocrStatusText.textContent = 'Analyzing receipt data...';
+            ocrPercentText.textContent = '100%';
+            ocrProgressBar.style.width = '100%';
+
+            // Send extracted text to backend API for heuristic & fuzzy matching
+            sendTextForAnalysis(text);
+        } catch (err) {
+            console.error('OCR Error:', err);
+            ocrStatusText.textContent = 'OCR completed with fallback.';
+            // Even if local OCR has issues, let user enter details
+            ocrProgressCard.classList.add('hidden');
+        }
+    }
+
+    // Backend text parsing API
+    function sendTextForAnalysis(ocrText) {
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const formData = new FormData();
+        formData.append('ocr_text', ocrText);
+
+        fetch("{% url 'transactions:scan_receipt' %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken
+            },
+            body: formData
+        })
+        .then(res => res.json())
+        .then(result => {
+            ocrProgressCard.classList.add('hidden');
+            if (result.status === 'success' && result.data) {
+                applyAnalysisResults(result.data);
+            }
+        })
+        .catch(err => {
+            console.error('Analysis error:', err);
+            ocrProgressCard.classList.add('hidden');
+        });
+    }
+
+    // Populate the form fields with extracted data
+    function applyAnalysisResults(data) {
+        autoDetectedBadge.classList.remove('hidden');
+
+        // Amount
+        if (data.amount) {
+            fieldAmount.value = data.amount;
+        }
+
+        // Date
+        if (data.date) {
+            fieldDate.value = data.date;
+        }
+
+        // Description
+        if (data.description) {
+            fieldDescription.value = data.description;
+        }
+
+        // Matched Account
+        if (data.account_id) {
+            fieldAccount.value = data.account_id;
+            accountMatchedPill.classList.remove('hidden');
+            updateCurrencySymbol();
+        } else {
+            accountMatchedPill.classList.add('hidden');
+        }
+
+        // Matched Category
+        if (data.category_id) {
+            fieldCategory.value = data.category_id;
+            categoryMatchedPill.classList.remove('hidden');
+        } else {
+            categoryMatchedPill.classList.add('hidden');
+        }
+
+        // Debt Detection
+        if (data.is_debt_payment) {
+            checkIsDebtPayment.checked = true;
+            debtSelectorGroup.classList.remove('hidden');
+            debtAlertBanner.classList.remove('hidden');
+
+            if (data.debt_id) {
+                fieldDebtId.value = data.debt_id;
+                debtAlertText.textContent = `Matched to active debt "${data.debt_title}" (${data.debt_creditor}). Balance will automatically reduce upon confirmation.`;
+            } else {
+                debtAlertText.textContent = `Receipt detected as a loan / debt payment! Please confirm which debt to credit below.`;
+            }
+        } else {
+            checkIsDebtPayment.checked = false;
+            debtSelectorGroup.classList.add('hidden');
+            debtAlertBanner.classList.add('hidden');
+        }
+
+        // Notes / Raw preview
+        if (data.raw_text_preview) {
+            fieldNotes.value = `Scanned from receipt. Extracted text: \n${data.raw_text_preview.slice(0, 150)}...`;
+        }
+
+        // Highlight inputs with a subtle pulse to draw user attention
+        [fieldAmount, fieldDescription, fieldAccount].forEach(el => {
+            el.classList.add('ring-2', 'ring-emerald-500');
+            setTimeout(() => el.classList.remove('ring-2', 'ring-emerald-500'), 1500);
+        });
+    }
+});
+</script>
+{% endblock %}

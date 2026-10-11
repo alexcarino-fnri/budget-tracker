@@ -1,0 +1,44 @@
+{% extends 'base/base.html' %}
+{% load humanize %}
+
+{% block title %}Delete Monthly Bill - PisoFlow{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto space-y-6 pt-6">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-sm text-center">
+        <div class="w-14 h-14 rounded-2xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto mb-4">
+            <i data-lucide="trash-2" class="w-7 h-7"></i>
+        </div>
+
+        <h1 class="text-xl font-bold text-slate-900 dark:text-white">Delete Monthly Bill?</h1>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1.5">
+            Are you sure you want to remove the recurring schedule for <strong class="text-slate-900 dark:text-white">{{ object.description }}</strong>? Past transactions already recorded in your ledger will not be affected.
+        </p>
+
+        <div class="my-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 text-left text-xs space-y-1.5">
+            <div class="flex justify-between">
+                <span class="text-slate-400">Amount:</span>
+                <span class="font-mono font-bold text-slate-900 dark:text-white">{{ object.account.currency_symbol|default:CURRENCY_SYMBOL }} {{ object.amount|intcomma }}</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-slate-400">Next Due:</span>
+                <span class="font-semibold text-slate-800 dark:text-slate-200">{{ object.next_run_date|date:"M d, Y" }}</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-slate-400">Account:</span>
+                <span class="font-semibold text-slate-800 dark:text-slate-200">{{ object.account.name }}</span>
+            </div>
+        </div>
+
+        <form method="post" class="flex items-center justify-center gap-3">
+            {% csrf_token %}
+            <a href="{% url 'transactions:bills_list' %}" class="px-5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold transition">
+                Keep Schedule
+            </a>
+            <button type="submit" class="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold shadow-md shadow-rose-500/20 transition">
+                Yes, Delete Bill
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

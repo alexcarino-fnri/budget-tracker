@@ -1,28 +1,49 @@
-# Django
-*.log
-*.pot
-*.pyc
-__pycache__/
-local_settings.py
-db.sqlite3
-media
-staticfiles
-
 # Python
-.venv
-env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+.venv/
 venv/
 ENV/
-env.bak/
-venv.bak/
+env/
 
-# PyCharm
-.idea/
+# Environment Variables & Secrets
+.env
+*.env.local
 
-# Windows
-Thumbs.db
-ehthumbs.db
-Desktop.ini
+# Database & SQLite
+*.sqlite3
+*.db
 
-# Mac
+# Media uploads (user receipts, etc.)
+media/
+
+# IDE & OS
 .DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Antigravity IDE cache / system
+.system_generated/

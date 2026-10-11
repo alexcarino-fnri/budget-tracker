@@ -1,0 +1,90 @@
+{% extends 'base/base.html' %}
+{% load humanize %}
+
+{% block title %}{{ account.name }} | Account Details{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <a href="{% url 'wallets:list' %}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-emerald-500 transition mb-3">
+                <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+                <span>Back to Accounts</span>
+            </a>
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold" style="background-color: {{ account.color_hex }};">
+                    {% if account.account_type == 'CASH' %}<i data-lucide="banknote" class="w-5 h-5"></i>
+                    {% elif account.account_type == 'BANK' %}<i data-lucide="landmark" class="w-5 h-5"></i>
+                    {% elif account.account_type == 'E_WALLET' %}<i data-lucide="smartphone" class="w-5 h-5"></i>
+                    {% elif account.account_type == 'CREDIT_CARD' %}<i data-lucide="credit-card" class="w-5 h-5"></i>
+                    {% else %}<i data-lucide="wallet" class="w-5 h-5"></i>{% endif %}
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">{{ account.name }}</h1>
+                    <span class="text-xs text-slate-400">{{ account.get_account_type_display }} &bull; {{ account.currency }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <a href="{% url 'wallets:update' account.pk %}" class="px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                Edit Account
+            </a>
+            <a href="{% url 'transactions:create' %}?account={{ account.pk }}" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition">
+                + New Transaction
+            </a>
+        </div>
+    </div>
+
+    <!-- Balance stats -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Current Computed Balance</span>
+            <div class="mt-2 text-3xl font-bold font-mono {% if current_balance < 0 %}text-rose-500{% else %}text-emerald-600 dark:text-emerald-400{% endif %}">
+                {{ account.currency_symbol }} {{ current_balance|intcomma }}
+            </div>
+        </div>
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Opening Balance</span>
+            <div class="mt-2 text-3xl font-bold font-mono text-slate-700 dark:text-slate-300">
+                {{ account.currency_symbol }} {{ account.opening_balance|intcomma }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Transactions List -->
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
+        <h2 class="text-base font-semibold text-slate-900 dark:text-white mb-4">Recent Account Activity</h2>
+        {% if transactions %}
+        <div class="divide-y divide-slate-100 dark:divide-slate-800">
+            {% for tx in transactions %}
+            <div class="py-3.5 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl flex items-center justify-center 
+                        {% if tx.transaction_type == 'INCOME' %}bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400
+                        {% elif tx.transaction_type == 'EXPENSE' %}bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400
+                        {% else %}bg-brand-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400{% endif %}">
+                        {% if tx.transaction_type == 'INCOME' %}<i data-lucide="arrow-down-left" class="w-4 h-4"></i>
+                        {% elif tx.transaction_type == 'EXPENSE' %}<i data-lucide="arrow-up-right" class="w-4 h-4"></i>
+                        {% else %}<i data-lucide="arrow-left-right" class="w-4 h-4"></i>{% endif %}
+                    </div>
+                    <div>
+                        <div class="text-sm font-semibold text-slate-900 dark:text-white">{{ tx.description }}</div>
+                        <div class="text-xs text-slate-400">{{ tx.date }} &bull; {{ tx.category.name|default:"Transfer / Uncategorized" }}</div>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="font-mono font-bold text-sm {% if tx.transaction_type == 'INCOME' or tx.to_account == account and tx.transaction_type == 'TRANSFER' %}text-emerald-600 dark:text-emerald-400{% else %}text-rose-600 dark:text-rose-400{% endif %}">
+                        {% if tx.transaction_type == 'INCOME' or tx.to_account == account and tx.transaction_type == 'TRANSFER' %}+{% else %}-{% endif %}{{ account.currency_symbol }} {{ tx.amount|intcomma }}
+                    </div>
+                    <span class="text-[11px] text-slate-400">{{ tx.get_transaction_type_display }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-sm text-slate-400 py-6 text-center">No transactions recorded for this account yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

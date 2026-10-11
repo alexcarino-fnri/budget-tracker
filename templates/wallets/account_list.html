@@ -1,0 +1,115 @@
+{% extends 'base/base.html' %}
+{% load humanize %}
+
+{% block title %}Accounts & Wallets{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Accounts & Wallets</h1>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Manage bank accounts, cash, digital wallets (GCash/Maya), and credit lines.</p>
+        </div>
+        <div>
+            <a href="{% url 'wallets:create' %}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold shadow-md shadow-emerald-600/20 active:scale-[0.99] transition">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                <span>Add Account</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary KPI Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Liquid Assets</span>
+            <div class="mt-2 text-2xl font-bold font-mono text-emerald-600 dark:text-emerald-400">
+                {{ primary_currency_symbol|default:CURRENCY_SYMBOL }} {{ total_assets|intcomma }}
+            </div>
+            <p class="text-xs text-slate-400 mt-1">Cash, Bank & E-Wallets</p>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Credit & Liabilities</span>
+            <div class="mt-2 text-2xl font-bold font-mono text-rose-600 dark:text-rose-400">
+                {{ primary_currency_symbol|default:CURRENCY_SYMBOL }} {{ total_liabilities|intcomma }}
+            </div>
+            <p class="text-xs text-slate-400 mt-1">Credit cards & negative balances</p>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Net Account Balance</span>
+            <div class="mt-2 text-2xl font-bold font-mono {% if net_balance >= 0 %}text-slate-900 dark:text-white{% else %}text-rose-500{% endif %}">
+                {{ primary_currency_symbol|default:CURRENCY_SYMBOL }} {{ net_balance|intcomma }}
+            </div>
+            <p class="text-xs text-slate-400 mt-1">Assets minus credit cards</p>
+        </div>
+    </div>
+
+    <!-- Accounts Grid -->
+    {% if accounts_with_balances %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {% for acc in accounts_with_balances %}
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition flex flex-col justify-between group">
+            <div>
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold shadow-sm" style="background-color: {{ acc.color_hex }};">
+                            {% if acc.account_type == 'CASH' %}<i data-lucide="banknote" class="w-5 h-5"></i>
+                            {% elif acc.account_type == 'BANK' %}<i data-lucide="landmark" class="w-5 h-5"></i>
+                            {% elif acc.account_type == 'E_WALLET' %}<i data-lucide="smartphone" class="w-5 h-5"></i>
+                            {% elif acc.account_type == 'CREDIT_CARD' %}<i data-lucide="credit-card" class="w-5 h-5"></i>
+                            {% else %}<i data-lucide="wallet" class="w-5 h-5"></i>{% endif %}
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-slate-900 dark:text-white group-hover:text-emerald-500 transition">{{ acc.name }}</h3>
+                            <span class="text-xs text-slate-400">{{ acc.get_account_type_display }}</span>
+                        </div>
+                    </div>
+                    <span class="text-xs px-2 py-0.5 rounded-full {% if acc.is_active %}bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/50{% else %}bg-slate-100 dark:bg-slate-800 text-slate-400{% endif %}">
+                        {{ acc.currency }} ({{ acc.currency_symbol }})
+                    </span>
+                </div>
+
+                <div class="my-4">
+                    <span class="text-xs text-slate-400">Current Balance</span>
+                    <div class="text-2xl font-bold font-mono tracking-tight {% if acc.current_balance < 0 %}text-rose-500{% else %}text-slate-900 dark:text-white{% endif %}">
+                        {{ acc.currency_symbol }} {{ acc.current_balance|intcomma }}
+                    </div>
+                    <span class="text-xs text-slate-400">Opening: {{ acc.currency_symbol }} {{ acc.opening_balance|intcomma }}</span>
+                </div>
+            </div>
+
+            <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+                <a href="{% url 'wallets:detail' acc.pk %}" class="font-semibold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1">
+                    <span>View Activity</span>
+                    <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                </a>
+                <div class="flex items-center gap-2">
+                    <a href="{% url 'wallets:update' acc.pk %}" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Edit">
+                        <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                    </a>
+                    <a href="{% url 'wallets:delete' acc.pk %}" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition" title="Delete">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-12 text-center max-w-lg mx-auto">
+        <div class="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 mx-auto mb-4">
+            <i data-lucide="credit-card" class="w-8 h-8"></i>
+        </div>
+        <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-1">No accounts added yet</h2>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">Create your first account (such as Physical Cash, GCash, or Maya) to start tracking transactions.</p>
+        <a href="{% url 'wallets:create' %}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold shadow-md transition">
+            <i data-lucide="plus" class="w-4 h-4"></i>
+            <span>Add First Account</span>
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

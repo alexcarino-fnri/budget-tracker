@@ -1,0 +1,160 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{% if form.instance.pk %}Edit Transaction{% else %}Add Transaction{% endif %}{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto space-y-6">
+    <div>
+        <a href="{% url 'transactions:list' %}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-emerald-500 transition mb-3">
+            <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+            <span>Back to Activity</span>
+        </a>
+        <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+            {% if form.instance.pk %}Edit Transaction{% else %}Add Transaction{% endif %}
+        </h1>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Quickly log an expense, income, or internal account transfer.</p>
+    </div>
+
+    {% if not form.instance.pk %}
+    <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/10 border border-emerald-500/20 flex items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                <i data-lucide="scan-line" class="w-5 h-5"></i>
+            </div>
+            <div>
+                <p class="text-xs font-bold text-slate-900 dark:text-white">Have a receipt or screenshot?</p>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400">PisoFlow can auto-extract the amount, account, and detect debt payments.</p>
+            </div>
+        </div>
+        <a href="{% url 'transactions:scan_receipt' %}" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shrink-0 transition shadow-sm">
+            Scan Receipt
+        </a>
+    </div>
+    {% endif %}
+
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 sm:p-8 shadow-sm">
+        <form method="post" enctype="multipart/form-data" class="space-y-5">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs">
+                {% for err in form.non_field_errors %}
+                    <p>{{ err }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Transaction Type Selector -->
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Transaction Type</label>
+                {{ form.transaction_type }}
+                {% if form.transaction_type.errors %}
+                    <p class="text-xs text-rose-500 mt-1">{{ form.transaction_type.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Amount & Date -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Amount ({{ CURRENCY_SYMBOL }})</label>
+                    {{ form.amount }}
+                    {% if form.amount.errors %}
+                        <p class="text-xs text-rose-500 mt-1">{{ form.amount.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Date</label>
+                    {{ form.date }}
+                    {% if form.date.errors %}
+                        <p class="text-xs text-rose-500 mt-1">{{ form.date.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Description</label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                    <p class="text-xs text-rose-500 mt-1">{{ form.description.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Account & Destination Account (for Transfers) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label id="account-label" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Account</label>
+                    {{ form.account }}
+                    {% if form.account.errors %}
+                        <p class="text-xs text-rose-500 mt-1">{{ form.account.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                <div id="to-account-container" class="hidden">
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Transfer To Account</label>
+                    {{ form.to_account }}
+                    {% if form.to_account.errors %}
+                        <p class="text-xs text-rose-500 mt-1">{{ form.to_account.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                <div id="category-container">
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Category</label>
+                    {{ form.category }}
+                    {% if form.category.errors %}
+                        <p class="text-xs text-rose-500 mt-1">{{ form.category.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Optional Notes -->
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Notes (Optional)</label>
+                {{ form.notes }}
+            </div>
+
+            <!-- Receipt upload -->
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Receipt Attachment (Optional)</label>
+                {{ form.receipt }}
+                {% if form.instance.receipt %}
+                <div class="mt-2 text-xs text-slate-400 flex items-center gap-2">
+                    <span>Current:</span>
+                    <a href="{{ form.instance.receipt.url }}" target="_blank" class="text-emerald-500 hover:underline">View Uploaded Image</a>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-800">
+                <a href="{% url 'transactions:list' %}" class="px-5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition">Cancel</a>
+                <button type="submit" class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold shadow-md shadow-emerald-600/20 active:scale-[0.99] transition">
+                    {% if form.instance.pk %}Update Record{% else %}Save Transaction{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function handleTypeChange(val) {
+        const toAccountContainer = document.getElementById('to-account-container');
+        const categoryContainer = document.getElementById('category-container');
+        const accountLabel = document.getElementById('account-label');
+
+        if (val === 'TRANSFER') {
+            toAccountContainer.classList.remove('hidden');
+            categoryContainer.classList.add('hidden');
+            accountLabel.textContent = 'Transfer From Account';
+        } else {
+            toAccountContainer.classList.add('hidden');
+            categoryContainer.classList.remove('hidden');
+            accountLabel.textContent = 'Account';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const typeSelect = document.getElementById('id_transaction_type');
+        if (typeSelect) {
+            handleTypeChange(typeSelect.value);
+        }
+    });
+</script>
+{% endblock %}

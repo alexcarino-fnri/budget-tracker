@@ -1,0 +1,57 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Sign In{% endblock %}
+
+{% block auth_content %}
+<div class="w-full max-w-md">
+    <!-- Brand Header -->
+    <div class="text-center mb-8">
+        <a href="/" class="inline-block group">
+            <img src="{% static 'icons/pisoflow-icon.svg' %}" alt="PisoFlow Icon" class="w-16 h-16 mx-auto rounded-3xl shadow-xl shadow-emerald-500/20 mb-3 object-contain group-hover:scale-105 transition transform" />
+            <h1 class="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">Piso<span class="text-emerald-500">Flow</span></h1>
+        </a>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Track every peso. Grow every day.</p>
+    </div>
+
+    <!-- Login Card -->
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 sm:p-8 shadow-xl shadow-slate-950/5">
+        <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-6">Sign in to your account</h2>
+
+        {% if form.errors %}
+        <div class="mb-5 p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-sm flex items-center gap-2">
+            <i data-lucide="alert-circle" class="w-4 h-4 shrink-0"></i>
+            <span>Invalid username or password. Please try again.</span>
+        </div>
+        {% endif %}
+
+        <form method="post" action="{% url 'accounts:login' %}" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label for="id_username" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Username</label>
+                {{ form.username }}
+            </div>
+
+            <div>
+                <div class="flex items-center justify-between mb-1.5">
+                    <label for="id_password" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Password</label>
+                    <a href="{% url 'accounts:password_reset' %}" class="text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:underline">Forgot password?</a>
+                </div>
+                {{ form.password }}
+            </div>
+
+            <button type="submit" class="w-full mt-2 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm shadow-md shadow-emerald-600/20 active:scale-[0.99] transition flex items-center justify-center gap-2">
+                <span>Sign In</span>
+                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </button>
+        </form>
+
+        <div class="mt-6 pt-6 border-t border-slate-100 dark:border-slate-800 text-center">
+            <p class="text-sm text-slate-500 dark:text-slate-400">
+                Don't have an account yet?
+                <a href="{% url 'accounts:register' %}" class="font-semibold text-emerald-600 dark:text-emerald-400 hover:underline ml-1">Create one now</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

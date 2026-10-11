@@ -1,0 +1,412 @@
+{% extends 'base/base.html' %}
+{% load humanize %}
+
+{% block title %}Advanced Debt Payoff Planner - PisoFlow{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <a href="{% url 'debts:list' %}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-emerald-500 transition mb-2">
+                <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+                <span>Back to Debts List</span>
+            </a>
+            <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
+                <span class="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                    <i data-lucide="zap" class="w-6 h-6"></i>
+                </span>
+                Advanced Debt Payoff Planner
+            </h1>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                Optimizes repayment across multiple debts with varying balances, interest rates, frequencies, and due dates.
+            </p>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <a href="{% url 'debts:create' %}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold transition border border-slate-200 dark:border-slate-700 shadow-sm">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                <span>Add Loan / Debt</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Interactive Simulation Control Panel -->
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
+        <form method="get" class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+            <!-- Extra Contribution Input -->
+            <div class="md:col-span-5">
+                <label for="extra-input" class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5 flex items-center justify-between">
+                    <span>Extra Monthly Budget</span>
+                    <span class="text-emerald-600 dark:text-emerald-400 font-semibold lowercase">accelerator</span>
+                </label>
+                <div class="relative">
+                    <span class="absolute left-3.5 top-2.5 font-bold text-slate-400">{{ CURRENCY_SYMBOL }}</span>
+                    <input type="number" step="100" min="0" name="extra" id="extra-input" value="{{ extra_monthly }}" 
+                           class="w-full pl-8 pr-4 py-2.5 font-mono font-bold text-lg rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 outline-none transition">
+                </div>
+            </div>
+
+            <!-- Strategy Selection -->
+            <div class="md:col-span-4">
+                <label for="strategy-select" class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
+                    Payoff Optimization Strategy
+                </label>
+                <select name="strategy" id="strategy-select"
+                        class="w-full px-3.5 py-2.5 text-sm font-semibold rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 outline-none transition">
+                    <option value="AVALANCHE" {% if selected_strategy == 'AVALANCHE' %}selected{% endif %}>
+                        ⚡ Debt Avalanche (Highest Interest Rate First)
+                    </option>
+                    <option value="SNOWBALL" {% if selected_strategy == 'SNOWBALL' %}selected{% endif %}>
+                        ❄️ Debt Snowball (Lowest Balance First)
+                    </option>
+                    <option value="DUE_DATE" {% if selected_strategy == 'DUE_DATE' %}selected{% endif %}>
+                        📅 Due Date Priority (Earliest Due Date First)
+                    </option>
+                </select>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="md:col-span-3">
+                <button type="submit" class="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm shadow-md shadow-emerald-600/20 active:scale-[0.99] transition flex items-center justify-center gap-2">
+                    <i data-lucide="sparkles" class="w-4 h-4"></i>
+                    <span>Simulate Plan</span>
+                </button>
+            </div>
+        </form>
+
+        <!-- Quick Extra Buttons for Ease of Use -->
+        <div class="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 text-xs">
+            <span class="text-slate-400 font-medium">Quick Presets:</span>
+            <a href="?extra=0&strategy={{ selected_strategy }}" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-mono transition {% if extra_monthly == 0 %}ring-2 ring-emerald-500{% endif %}">
+                +{{ CURRENCY_SYMBOL }} 0 (Minimums Only)
+            </a>
+            <a href="?extra=500&strategy={{ selected_strategy }}" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-mono transition {% if extra_monthly == 500 %}ring-2 ring-emerald-500{% endif %}">
+                +{{ CURRENCY_SYMBOL }} 500/mo
+            </a>
+            <a href="?extra=1000&strategy={{ selected_strategy }}" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-mono transition {% if extra_monthly == 1000 %}ring-2 ring-emerald-500{% endif %}">
+                +{{ CURRENCY_SYMBOL }} 1,000/mo
+            </a>
+            <a href="?extra=2500&strategy={{ selected_strategy }}" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-mono transition {% if extra_monthly == 2500 %}ring-2 ring-emerald-500{% endif %}">
+                +{{ CURRENCY_SYMBOL }} 2,500/mo
+            </a>
+            <a href="?extra=5000&strategy={{ selected_strategy }}" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-mono transition {% if extra_monthly == 5000 %}ring-2 ring-emerald-500{% endif %}">
+                +{{ CURRENCY_SYMBOL }} 5,000/mo
+            </a>
+        </div>
+    </div>
+
+    <!-- Active Strategy Banner & High-Level Metrics -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Metric 1: Total Debt -->
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Outstanding Debt</span>
+            <div class="mt-2 text-2xl font-bold font-mono text-rose-600 dark:text-rose-400">
+                {{ CURRENCY_SYMBOL }} {{ comparison.total_debt|intcomma }}
+            </div>
+            <p class="text-xs text-slate-400 mt-1">Across {{ comparison.debts_count }} active liabilities</p>
+        </div>
+
+        <!-- Metric 2: Monthly Requirement -->
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Required Monthly Payment</span>
+            <div class="mt-2 text-2xl font-bold font-mono text-slate-900 dark:text-white">
+                {{ CURRENCY_SYMBOL }} {{ comparison.total_minimum_monthly|intcomma }}
+            </div>
+            <p class="text-xs text-emerald-600 dark:text-emerald-400 mt-1 font-semibold">
+                + {{ CURRENCY_SYMBOL }} {{ extra_monthly|intcomma }} extra target
+            </p>
+        </div>
+
+        <!-- Metric 3: Debt-Free Target Date -->
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Debt-Free Target Date</span>
+            <div class="mt-2 text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                {{ active_plan.payoff_date|date:"F Y" }}
+            </div>
+            <p class="text-xs text-slate-400 mt-1">{{ active_plan.months }} months from today</p>
+        </div>
+
+        <!-- Metric 4: Total Interest Saved -->
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Interest Saved vs Minimums</span>
+            <div class="mt-2 text-2xl font-bold font-mono text-emerald-600 dark:text-emerald-400">
+                {{ CURRENCY_SYMBOL }} {{ comparison.interest_saved_vs_baseline|intcomma }}
+            </div>
+            <p class="text-xs text-emerald-600 dark:text-emerald-400 mt-1">
+                {% if comparison.months_saved_vs_baseline > 0 %}{{ comparison.months_saved_vs_baseline }} months faster!{% else %}Baseline pace{% endif %}
+            </p>
+        </div>
+    </div>
+
+    <!-- Multi-Strategy Comparison (3 Pillars) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- 1. Avalanche Card -->
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm space-y-4 relative border-2 {% if selected_strategy == 'AVALANCHE' %}border-emerald-500 shadow-emerald-500/10 ring-2 ring-emerald-500/20{% else %}border-slate-200 dark:border-slate-800 opacity-90{% endif %}">
+            <div class="flex items-start justify-between">
+                <div>
+                    <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900 mb-2">
+                        <i data-lucide="trending-down" class="w-3.5 h-3.5"></i>
+                        <span>Debt Avalanche</span>
+                    </div>
+                    <h3 class="text-base font-bold text-slate-900 dark:text-white">Highest APR First</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Saves the absolute most money in total interest costs.</p>
+                </div>
+                {% if selected_strategy == 'AVALANCHE' %}
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500 text-white">Active</span>
+                {% endif %}
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 py-3 border-y border-slate-100 dark:border-slate-800 text-xs">
+                <div>
+                    <span class="text-slate-400">Duration</span>
+                    <div class="text-xl font-bold font-mono text-slate-900 dark:text-white mt-0.5">{{ comparison.avalanche.months }} mos</div>
+                    <span class="text-[11px] text-slate-400">{{ comparison.avalanche.payoff_date|date:"M Y" }}</span>
+                </div>
+                <div>
+                    <span class="text-slate-400">Total Interest</span>
+                    <div class="text-xl font-bold font-mono text-emerald-600 dark:text-emerald-400 mt-0.5">{{ CURRENCY_SYMBOL }} {{ comparison.avalanche.total_interest|intcomma }}</div>
+                    <span class="text-[11px] text-slate-400">Optimal savings</span>
+                </div>
+            </div>
+
+            <a href="?extra={{ extra_monthly }}&strategy=AVALANCHE" class="block w-full text-center py-2 px-3 rounded-xl text-xs font-semibold transition {% if selected_strategy == 'AVALANCHE' %}bg-emerald-600 text-white{% else %}bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300{% endif %}">
+                {% if selected_strategy == 'AVALANCHE' %}Currently Selected{% else %}View Timeline{% endif %}
+            </a>
+        </div>
+
+        <!-- 2. Snowball Card -->
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm space-y-4 relative border-2 {% if selected_strategy == 'SNOWBALL' %}border-teal-500 shadow-teal-500/10 ring-2 ring-teal-500/20{% else %}border-slate-200 dark:border-slate-800 opacity-90{% endif %}">
+            <div class="flex items-start justify-between">
+                <div>
+                    <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-teal-50 dark:bg-teal-950 text-teal-600 dark:text-teal-400 border border-teal-200 dark:border-teal-900 mb-2">
+                        <i data-lucide="snowflake" class="w-3.5 h-3.5"></i>
+                        <span>Debt Snowball</span>
+                    </div>
+                    <h3 class="text-base font-bold text-slate-900 dark:text-white">Lowest Balance First</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Quick psychological wins to knock off individual debts fast.</p>
+                </div>
+                {% if selected_strategy == 'SNOWBALL' %}
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-500 text-white">Active</span>
+                {% endif %}
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 py-3 border-y border-slate-100 dark:border-slate-800 text-xs">
+                <div>
+                    <span class="text-slate-400">Duration</span>
+                    <div class="text-xl font-bold font-mono text-slate-900 dark:text-white mt-0.5">{{ comparison.snowball.months }} mos</div>
+                    <span class="text-[11px] text-slate-400">{{ comparison.snowball.payoff_date|date:"M Y" }}</span>
+                </div>
+                <div>
+                    <span class="text-slate-400">Total Interest</span>
+                    <div class="text-xl font-bold font-mono text-amber-500 mt-0.5">{{ CURRENCY_SYMBOL }} {{ comparison.snowball.total_interest|intcomma }}</div>
+                    <span class="text-[11px] text-slate-400">Slightly higher interest</span>
+                </div>
+            </div>
+
+            <a href="?extra={{ extra_monthly }}&strategy=SNOWBALL" class="block w-full text-center py-2 px-3 rounded-xl text-xs font-semibold transition {% if selected_strategy == 'SNOWBALL' %}bg-teal-600 text-white{% else %}bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300{% endif %}">
+                {% if selected_strategy == 'SNOWBALL' %}Currently Selected{% else %}View Timeline{% endif %}
+            </a>
+        </div>
+
+        <!-- 3. Due Date Priority Card -->
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm space-y-4 relative border-2 {% if selected_strategy == 'DUE_DATE' %}border-sky-500 shadow-sky-500/10 ring-2 ring-sky-500/20{% else %}border-slate-200 dark:border-slate-800 opacity-90{% endif %}">
+            <div class="flex items-start justify-between">
+                <div>
+                    <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-sky-50 dark:bg-sky-950 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-900 mb-2">
+                        <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+                        <span>Due Date Priority</span>
+                    </div>
+                    <h3 class="text-base font-bold text-slate-900 dark:text-white">Earliest Due Date First</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Eliminates urgent upcoming deadlines and prevents late fees.</p>
+                </div>
+                {% if selected_strategy == 'DUE_DATE' %}
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-500 text-white">Active</span>
+                {% endif %}
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 py-3 border-y border-slate-100 dark:border-slate-800 text-xs">
+                <div>
+                    <span class="text-slate-400">Duration</span>
+                    <div class="text-xl font-bold font-mono text-slate-900 dark:text-white mt-0.5">{{ comparison.due_date.months }} mos</div>
+                    <span class="text-[11px] text-slate-400">{{ comparison.due_date.payoff_date|date:"M Y" }}</span>
+                </div>
+                <div>
+                    <span class="text-slate-400">Total Interest</span>
+                    <div class="text-xl font-bold font-mono text-sky-500 mt-0.5">{{ CURRENCY_SYMBOL }} {{ comparison.due_date.total_interest|intcomma }}</div>
+                    <span class="text-[11px] text-slate-400">Urgency focused</span>
+                </div>
+            </div>
+
+            <a href="?extra={{ extra_monthly }}&strategy=DUE_DATE" class="block w-full text-center py-2 px-3 rounded-xl text-xs font-semibold transition {% if selected_strategy == 'DUE_DATE' %}bg-sky-600 text-white{% else %}bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300{% endif %}">
+                {% if selected_strategy == 'DUE_DATE' %}Currently Selected{% else %}View Timeline{% endif %}
+            </a>
+        </div>
+    </div>
+
+    <!-- Active Debts Individual Target Milestones -->
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">
+            <div>
+                <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-500"></i>
+                    <span>Debt Payoff Milestones & Order ({{ active_plan.strategy }} Strategy)</span>
+                </h3>
+                <p class="text-xs text-slate-400">
+                    See the target clearance date and total financing cost for each debt based on your extra monthly allocation.
+                </p>
+            </div>
+            <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                Rollover Effect Active 🚀
+            </span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead>
+                    <tr class="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-semibold uppercase tracking-wider">
+                        <th class="py-3 px-3">Order</th>
+                        <th class="py-3 px-3">Debt / Creditor</th>
+                        <th class="py-3 px-3">Remaining Balance</th>
+                        <th class="py-3 px-3">Interest Rate</th>
+                        <th class="py-3 px-3">Payment Due & Frequency</th>
+                        <th class="py-3 px-3">Monthly Minimum</th>
+                        <th class="py-3 px-3">Est. Payoff Date</th>
+                        <th class="py-3 px-3 text-right">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                    {% for ds in active_plan.debt_summaries %}
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
+                        <td class="py-3 px-3 font-bold font-mono text-emerald-600 dark:text-emerald-400">
+                            #{{ forloop.counter }}
+                        </td>
+                        <td class="py-3 px-3">
+                            <span class="font-bold text-slate-900 dark:text-white block">{{ ds.title }}</span>
+                            <span class="text-slate-400 text-[11px]">{{ ds.creditor }}</span>
+                        </td>
+                        <td class="py-3 px-3 font-mono font-bold text-slate-900 dark:text-white">
+                            {{ CURRENCY_SYMBOL }} {{ ds.initial_balance|intcomma }}
+                        </td>
+                        <td class="py-3 px-3">
+                            <span class="font-semibold text-amber-500">{{ ds.rate }}% APR</span>
+                        </td>
+                        <td class="py-3 px-3">
+                            <span class="font-medium text-slate-800 dark:text-slate-200 block">Day {{ ds.due_day }} of month</span>
+                            <span class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">{{ ds.frequency }}</span>
+                        </td>
+                        <td class="py-3 px-3 font-mono text-slate-600 dark:text-slate-300">
+                            {{ CURRENCY_SYMBOL }} {{ ds.monthly_min|intcomma }}/mo
+                        </td>
+                        <td class="py-3 px-3">
+                            <span class="px-2 py-0.5 rounded-md font-bold text-[11px] bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                                {{ ds.payoff_date|date:"M Y" }} ({{ ds.months_to_payoff }} mos)
+                            </span>
+                        </td>
+                        <td class="py-3 px-3 text-right">
+                            <a href="{% url 'debts:detail' ds.id %}" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold transition">
+                                View / Pay
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="py-8 text-center text-slate-400">
+                            No active debts found to simulate. You are debt free!
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Month-by-Month Amortization & Repayment Timeline -->
+    {% if active_plan.monthly_schedule %}
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+            <div>
+                <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <i data-lucide="calendar-days" class="w-4 h-4 text-emerald-500"></i>
+                    <span>Step-by-Step Payment Schedule Timeline</span>
+                </h3>
+                <p class="text-xs text-slate-400">
+                    Detailed monthly payment breakdowns including principal, interest accrual, and remaining portfolio balance.
+                </p>
+            </div>
+            <span class="text-xs text-slate-400">
+                Displaying first 36 months / milestones
+            </span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead>
+                    <tr class="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-semibold uppercase tracking-wider">
+                        <th class="py-3 px-3">Month</th>
+                        <th class="py-3 px-3">Date</th>
+                        <th class="py-3 px-3">Principal Paid</th>
+                        <th class="py-3 px-3">Interest Incurred</th>
+                        <th class="py-3 px-3">Total Paid</th>
+                        <th class="py-3 px-3">Remaining Balance</th>
+                        <th class="py-3 px-3">Accelerated Target Debt</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                    {% for item in active_plan.monthly_schedule %}
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
+                        <td class="py-2.5 px-3 font-mono font-bold text-slate-500">
+                            M{{ item.month_index }}
+                        </td>
+                        <td class="py-2.5 px-3 font-semibold text-slate-800 dark:text-slate-200">
+                            {{ item.date|date:"F Y" }}
+                        </td>
+                        <td class="py-2.5 px-3 font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                            {{ CURRENCY_SYMBOL }} {{ item.principal_paid|intcomma }}
+                        </td>
+                        <td class="py-2.5 px-3 font-mono text-rose-500">
+                            {{ CURRENCY_SYMBOL }} {{ item.interest_paid|intcomma }}
+                        </td>
+                        <td class="py-2.5 px-3 font-mono font-bold text-slate-900 dark:text-white">
+                            {{ CURRENCY_SYMBOL }} {{ item.total_payment|intcomma }}
+                        </td>
+                        <td class="py-2.5 px-3 font-mono font-bold {% if item.remaining_balance == 0 %}text-emerald-600 dark:text-emerald-400{% else %}text-slate-700 dark:text-slate-300{% endif %}">
+                            {{ CURRENCY_SYMBOL }} {{ item.remaining_balance|intcomma }}
+                        </td>
+                        <td class="py-2.5 px-3">
+                            {% for alloc in item.allocations %}
+                                {% if alloc.extra_paid > 0 %}
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                                        {{ alloc.title }}: +{{ CURRENCY_SYMBOL }} {{ alloc.extra_paid|intcomma }}
+                                        {% if alloc.is_cleared %}🎉 CLEARED!{% endif %}
+                                    </span>
+                                {% endif %}
+                            {% endfor %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Professional Guidance Callout -->
+    <div class="p-5 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-sky-500/10 border border-emerald-500/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                <i data-lucide="lightbulb" class="w-5 h-5"></i>
+            </div>
+            <div>
+                <h4 class="font-bold text-slate-900 dark:text-white text-sm">Automated Rollover Acceleration</h4>
+                <p class="text-slate-600 dark:text-slate-400 mt-0.5">
+                    Whenever a debt is paid off in PisoFlow, its required payment automatically rolls over into the next target debt. This creates a compounding repayment effect that dramatically shrinks your loan duration.
+                </p>
+            </div>
+        </div>
+        <a href="{% url 'debts:list' %}" class="px-4 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition shrink-0">
+            Manage Debts
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,87 @@
+{% extends 'base/base.html' %}
+{% load humanize %}
+
+{% block title %}Transactions & Activity{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Transactions & Activity</h1>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Filter, search, and manage all your incoming, outgoing, and transfer records.</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <a href="{% url 'transactions:scan_receipt' %}" class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold transition border border-slate-200 dark:border-slate-700 shadow-sm">
+                <i data-lucide="scan-line" class="w-4 h-4 text-emerald-500"></i>
+                <span>Scan Receipt</span>
+            </a>
+            <a href="{% url 'transactions:create' %}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold shadow-md shadow-emerald-600/20 active:scale-[0.99] transition">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                <span>Add Transaction</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters & Search Bar -->
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm">
+        <form method="get" 
+              hx-get="{% url 'transactions:list' %}" 
+              hx-target="#transaction-table-container" 
+              hx-trigger="change, keyup changed delay:350ms from:#search-input"
+              class="space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <!-- Search text -->
+                <div class="relative">
+                    <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400"></i>
+                    <input type="text" name="q" id="search-input" value="{{ search_q }}" placeholder="Search description, notes..." 
+                           class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition">
+                </div>
+
+                <!-- Type filter -->
+                <div>
+                    <select name="type" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition">
+                        <option value="">All Types (Income / Expense / Transfer)</option>
+                        <option value="INCOME" {% if selected_type == 'INCOME' %}selected{% endif %}>Income only</option>
+                        <option value="EXPENSE" {% if selected_type == 'EXPENSE' %}selected{% endif %}>Expenses only</option>
+                        <option value="TRANSFER" {% if selected_type == 'TRANSFER' %}selected{% endif %}>Transfers only</option>
+                    </select>
+                </div>
+
+                <!-- Account filter -->
+                <div>
+                    <select name="account" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition">
+                        <option value="">All Accounts</option>
+                        {% for acc in user_accounts %}
+                        <option value="{{ acc.pk }}" {% if selected_account == acc.pk|stringformat:"s" %}selected{% endif %}>{{ acc.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Category filter -->
+                <div>
+                    <select name="category" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition">
+                        <option value="">All Categories</option>
+                        {% for cat in user_categories %}
+                        <option value="{{ cat.pk }}" {% if selected_category == cat.pk|stringformat:"s" %}selected{% endif %}>{{ cat.name }} ({{ cat.get_category_type_display }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-slate-400 font-medium">Date Range:</span>
+                    <input type="date" name="date_from" value="{{ date_from }}" class="px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200">
+                    <span class="text-slate-400">to</span>
+                    <input type="date" name="date_to" value="{{ date_to }}" class="px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200">
+                </div>
+                <a href="{% url 'transactions:list' %}" class="text-slate-400 hover:text-emerald-500 font-medium transition">Reset Filters</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Transaction Table (Included HTMX Partial) -->
+    {% include 'transactions/partials/transaction_table.html' %}
+</div>
+{% endblock %}

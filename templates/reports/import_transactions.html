@@ -1,0 +1,142 @@
+{% extends 'base/base.html' %}
+{% load humanize %}
+
+{% block title %}Import Transactions from CSV{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+    <div>
+        <a href="{% url 'reports:summary' %}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-emerald-500 transition mb-3">
+            <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+            <span>Back to Reports</span>
+        </a>
+        <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Import Transactions from CSV</h1>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Bulk upload bank statements or external records with automatic validation preview before saving.</p>
+    </div>
+
+    <!-- Upload Box -->
+    {% if not preview %}
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 sm:p-8 shadow-sm space-y-6">
+        <form method="post" enctype="multipart/form-data" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Select CSV File</label>
+                <input type="file" name="csv_file" accept=".csv" required 
+                       class="w-full text-sm text-slate-500 dark:text-slate-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 dark:file:bg-emerald-950 dark:file:text-emerald-300">
+            </div>
+
+            <div class="pt-2">
+                <button type="submit" class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm shadow-md transition flex items-center gap-2">
+                    <i data-lucide="eye" class="w-4 h-4"></i>
+                    <span>Upload & Preview Validation</span>
+                </button>
+            </div>
+        </form>
+
+        <div class="pt-6 border-t border-slate-100 dark:border-slate-800">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Expected CSV Columns</h3>
+            <div class="bg-slate-50 dark:bg-slate-800/50 p-3.5 rounded-xl font-mono text-xs text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                Date,Type,Amount,Account,Category,Description,Notes
+            </div>
+            <p class="text-xs text-slate-400 mt-2">Example: <code class="text-emerald-500">2026-10-10,EXPENSE,350.00,GCash,Food & Dining,Jollibee Lunch,With team</code></p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Preview & Validation Step -->
+    {% if preview %}
+    <div class="space-y-6">
+        <!-- Results Banner -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Rows Processed</span>
+                <div class="text-2xl font-bold font-mono text-slate-900 dark:text-white mt-1">{{ result.total_rows }}</div>
+            </div>
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Valid Transactions</span>
+                <div class="text-2xl font-bold font-mono text-emerald-500 mt-1">{{ result.valid_rows|length }}</div>
+            </div>
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Invalid / Skipped Rows</span>
+                <div class="text-2xl font-bold font-mono {% if result.invalid_rows %}text-rose-500{% else %}text-slate-400{% endif %} mt-1">
+                    {{ result.invalid_rows|length }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Confirm Form -->
+        {% if result.valid_rows %}
+        <div class="p-5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <h3 class="font-bold text-emerald-900 dark:text-emerald-200">Ready to save {{ result.valid_rows|length }} transactions?</h3>
+                <p class="text-xs text-emerald-700 dark:text-emerald-400">These records will be added to your account ledger.</p>
+            </div>
+            <form method="post" class="flex items-center gap-3">
+                {% csrf_token %}
+                <a href="{% url 'reports:import' %}" class="px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">Cancel</a>
+                <button type="submit" name="confirm_import" value="1" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-md transition flex items-center gap-1.5">
+                    <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                    <span>Confirm & Import</span>
+                </button>
+            </form>
+        </div>
+        {% endif %}
+
+        <!-- Invalid Rows Alert (if any) -->
+        {% if result.invalid_rows %}
+        <div class="bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-900/60 rounded-2xl p-5 shadow-sm space-y-3">
+            <h3 class="font-bold text-sm text-rose-600 flex items-center gap-2">
+                <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                <span>Rows with Validation Errors (Will be Skipped)</span>
+            </h3>
+            <div class="divide-y divide-slate-100 dark:divide-slate-800 text-xs">
+                {% for err_row in result.invalid_rows %}
+                <div class="py-2.5 flex items-start justify-between">
+                    <div>
+                        <span class="font-semibold text-slate-800 dark:text-slate-200">Row {{ err_row.row_num }}: {{ err_row.description }} ({{ err_row.amount }})</span>
+                        <ul class="text-rose-500 mt-1 list-disc list-inside">
+                            {% for err in err_row.errors %}
+                            <li>{{ err }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Valid Rows Preview Table -->
+        {% if result.valid_rows %}
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm overflow-x-auto">
+            <h3 class="font-bold text-sm text-slate-900 dark:text-white mb-3">Validated Transactions Preview</h3>
+            <table class="w-full text-left text-xs">
+                <thead class="uppercase text-slate-400 border-b border-slate-100 dark:border-slate-800">
+                    <tr>
+                        <th class="py-2 px-3">Date</th>
+                        <th class="py-2 px-3">Type</th>
+                        <th class="py-2 px-3">Description</th>
+                        <th class="py-2 px-3">Account</th>
+                        <th class="py-2 px-3">Category</th>
+                        <th class="py-2 px-3 text-right">Amount</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                    {% for r in result.valid_rows %}
+                    <tr>
+                        <td class="py-2 px-3 font-mono text-slate-500">{{ r.date }}</td>
+                        <td class="py-2 px-3 font-semibold text-slate-700 dark:text-slate-300">{{ r.transaction_type }}</td>
+                        <td class="py-2 px-3 font-medium text-slate-900 dark:text-white">{{ r.description }}</td>
+                        <td class="py-2 px-3 text-slate-500">{{ r.account_name }}</td>
+                        <td class="py-2 px-3 text-slate-500">{{ r.category_name }}</td>
+                        <td class="py-2 px-3 font-mono font-bold text-right text-emerald-600 dark:text-emerald-400">{{ CURRENCY_SYMBOL }} {{ r.amount|intcomma }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

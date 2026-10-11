@@ -1,0 +1,99 @@
+/* Custom modern styling enhancements */
+:root {
+    color-scheme: light dark;
+}
+
+/* Glassmorphism utility */
+.glass-card {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.dark .glass-card {
+    background: rgba(15, 23, 42, 0.75);
+}
+
+/* Subtle sleek scrollbars */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.3);
+    border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.5);
+}
+
+/* HTMX transition indicators */
+.htmx-indicator {
+    opacity: 0;
+    transition: opacity 200ms ease-in;
+}
+.htmx-request .htmx-indicator,
+.htmx-request.htmx-indicator {
+    opacity: 1;
+}
+
+/* Quick add modal overlay animation */
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.97); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.animate-pop {
+    animation: fadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Dashboard interactive micro-animations & glowing card accents */
+@keyframes pulseSubtle {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.88; transform: scale(1.015); }
+}
+
+@keyframes floatSoft {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+}
+
+@keyframes shimmerGlow {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+.animate-pulse-subtle {
+    animation: pulseSubtle 3s ease-in-out infinite;
+}
+
+.animate-float {
+    animation: floatSoft 4s ease-in-out infinite;
+}
+
+.interactive-card {
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.interactive-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px -10px rgba(16, 185, 129, 0.15), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+}
+
+.dark .interactive-card:hover {
+    box-shadow: 0 14px 28px -10px rgba(16, 185, 129, 0.2), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
+}
+
+/* Chart Canvas interactive wrapper */
+.chart-container-animated {
+    position: relative;
+    transition: transform 0.3s ease;
+}
+
+.chart-container-animated:hover {
+    transform: scale(1.008);
+}
+
