@@ -76,6 +76,8 @@ If you prefer to configure the services manually through the Render web UI, foll
    - **Runtime**: **Python 3**
    - **Build Command**: `./build.sh`
    - **Start Command**: `gunicorn config.wsgi:application`
+     > [!WARNING]
+     > Render often auto-fills the Start Command with `gunicorn Budget_Tracker.wsgi:application` based on your GitHub repository name. Change it to `gunicorn config.wsgi:application` (we also provide a `Budget_Tracker` fallback alias in the codebase).
    - **Instance Type**: **Free**
 
 ---
@@ -193,3 +195,7 @@ python manage.py showmigrations
 - Verify that your Web Service and PostgreSQL database are in the **same region**.
 - Ensure `DATABASE_URL` is set to the **Internal Database URL** (e.g. `postgres://...dpg-xxxx-a...`), not the External URL.
 - On Render's Free tier, PostgreSQL databases expire after 30 days unless upgraded to a paid instance or recreated.
+
+### 5. `ModuleNotFoundError: No module named 'Budget_Tracker'`
+- **Cause**: Render automatically generated the Start Command based on your repository name (`Budget_Tracker`).
+- **Solution**: In your Web Service &rarr; **Settings** &rarr; change **Start Command** to `gunicorn config.wsgi:application`. (The codebase also includes a compatibility alias `Budget_Tracker/wsgi.py` that forwards directly to `config.wsgi`).
