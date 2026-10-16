@@ -46,65 +46,171 @@ class Command(BaseCommand):
         # 3. Ensure Default Wallets / Accounts with Categories & Credit Card settings
         account_defs = [
             {
+                'name': 'BDO Savings Account',
+                'type': Account.TYPE_SAVINGS,
+                'curr': 'PHP',
+                'color': '#1d4ed8',
+                'balance': Decimal('150000.00'),
+                'interest_rate': Decimal('0.125'),
+            },
+            {
+                'name': 'Landbank Payroll',
+                'type': Account.TYPE_SAVINGS,
+                'curr': 'PHP',
+                'color': '#15803d',
+                'balance': Decimal('0.00'),
+            },
+            {
+                'name': 'UnionBank (Pag-IBIG Loyalty)',
+                'type': Account.TYPE_SAVINGS,
+                'curr': 'PHP',
+                'color': '#ea580c',
+                'balance': Decimal('0.00'),
+            },
+            {
                 'name': 'Maya Wallet',
                 'type': Account.TYPE_E_WALLET,
                 'curr': 'PHP',
                 'color': '#22c55e',
-                'balance': Decimal('15000.00'),
+                'balance': Decimal('0.02'),
+            },
+            {
+                'name': 'Maya Savings',
+                'type': Account.TYPE_SAVINGS,
+                'curr': 'PHP',
+                'color': '#10b981',
+                'balance': Decimal('0.00'),
+                'interest_rate': Decimal('3.50'),
+            },
+            {
+                'name': 'Maya Credit',
+                'type': Account.TYPE_CREDIT_CARD,
+                'curr': 'PHP',
+                'color': '#6366f1',
+                'balance': Decimal('0.00'),
+            },
+            {
+                'name': 'Maya Black Credit Card',
+                'type': Account.TYPE_CREDIT_CARD,
+                'curr': 'PHP',
+                'color': '#0f172a',
+                'balance': Decimal('-28283.78'),  # Statement Due Oct 30
+                'credit_limit': Decimal('44000.00'),
+                'unbilled_amount': Decimal('13555.22'),  # 44000 - 2161 - 28283.78 = 13555.22
+                'statement_day': 10,
+                'due_day': 30,
+            },
+            {
+                'name': 'MariBank',
+                'type': Account.TYPE_SAVINGS,
+                'curr': 'PHP',
+                'color': '#f97316',
+                'balance': Decimal('890.02'),
+                'interest_rate': Decimal('2.50'),
+            },
+            {
+                'name': 'Mari Credit Card',
+                'type': Account.TYPE_CREDIT_CARD,
+                'curr': 'PHP',
+                'color': '#ea580c',
+                'balance': Decimal('-15242.48'),  # Statement Due Nov 4
+                'credit_limit': Decimal('37000.00'),
+                'unbilled_amount': Decimal('50.00'),  # 37000 - 21707.52 - 15242.48 = 50.00
+                'statement_day': 14,
+                'due_day': 4,
+            },
+            {
+                'name': 'GoTyme',
+                'type': Account.TYPE_SAVINGS,
+                'curr': 'PHP',
+                'color': '#06b6d4',
+                'balance': Decimal('2.89'),
+            },
+            {
+                'name': 'Go Save (GoTyme)',
+                'type': Account.TYPE_SAVINGS,
+                'curr': 'PHP',
+                'color': '#0891b2',
+                'balance': Decimal('0.93'),
+                'interest_rate': Decimal('4.00'),
             },
             {
                 'name': 'GCash',
                 'type': Account.TYPE_E_WALLET,
                 'curr': 'PHP',
                 'color': '#0284c7',
-                'balance': Decimal('10000.00'),
+                'balance': Decimal('0.00'),
             },
             {
-                'name': 'BPI Savings',
+                'name': 'DiskarTech',
                 'type': Account.TYPE_SAVINGS,
                 'curr': 'PHP',
-                'color': '#b91c1c',
-                'balance': Decimal('50000.00'),
+                'color': '#f59e0b',
+                'balance': Decimal('0.00'),
+                'interest_rate': Decimal('3.25'),
             },
             {
-                'name': 'Cash on Hand',
-                'type': Account.TYPE_CASH,
+                'name': 'Wise',
+                'type': Account.TYPE_E_WALLET,
                 'curr': 'PHP',
                 'color': '#10b981',
-                'balance': Decimal('5000.00'),
+                'balance': Decimal('0.00'),
             },
             {
-                'name': 'Maya Credit Card',
+                'name': 'Payoneer (USD)',
+                'type': Account.TYPE_E_WALLET,
+                'curr': 'USD',
+                'color': '#ff4800',
+                'balance': Decimal('0.00'),
+            },
+            {
+                'name': 'konek2CARD',
+                'type': Account.TYPE_E_WALLET,
+                'curr': 'PHP',
+                'color': '#64748b',
+                'balance': Decimal('0.00'),
+            },
+            {
+                'name': 'Atome',
                 'type': Account.TYPE_CREDIT_CARD,
                 'curr': 'PHP',
-                'color': '#6366f1',
-                'balance': Decimal('-28283.78'),
-                'credit_limit': Decimal('50000.00'),
-                'unbilled_amount': Decimal('3250.00'),
-                'statement_day': 10,
-                'due_day': 30,
-            },
-            {
-                'name': 'Mari Credit Card',
-                'type': Account.TYPE_CREDIT_CARD,
-                'curr': 'PHP',
-                'color': '#f97316',
-                'balance': Decimal('-15242.48'),
-                'credit_limit': Decimal('40000.00'),
-                'unbilled_amount': Decimal('1850.00'),
-                'statement_day': 14,
-                'due_day': 4,
-            },
-            {
-                'name': 'Maya Time Deposit',
-                'type': Account.TYPE_TIME_DEPOSIT,
-                'curr': 'PHP',
-                'color': '#8b5cf6',
-                'balance': Decimal('25000.00'),
-                'interest_rate': Decimal('6.00'),
-                'maturity_date': date(2027, 4, 16),
+                'color': '#eab308',
+                'balance': Decimal('-4427.11'),  # Active monthly installment due Nov 5
+                'credit_limit': Decimal('38430.00'),
+                'unbilled_amount': Decimal('7326.63'),  # 38430 - 26676.26 - 4427.11 = 7326.63
+                'statement_day': 20,
+                'due_day': 5,
             },
         ]
+
+        # Clean up previous seeded loans/bills with matching titles to prevent duplicates
+        loan_titles = [
+            'SPayLater',
+            'SLoan 1',
+            'SLoan 2',
+            'Maya Loan',
+            'Appliance Loan (HC)',
+            'Apple MacBook Pro (HC)',
+            'Cash Loan (HC)',
+            'Atome Loan',
+            'Trustloan',
+            'Tiktok PayLater Bills',
+            'Billease',
+            'Cash Loan (CB)',
+            'Maya Credit Card Bills',
+            'Maya Black Credit Card Bills',
+            'Mari Credit Card Bills',
+            'Maya Easy Credit Bills',
+        ]
+        Debt.objects.filter(user=user, title__in=loan_titles).delete()
+        RecurringTransaction.objects.filter(user=user, description__in=loan_titles).delete()
+
+        # Purge old legacy placeholder accounts if they have no transactions
+        legacy_names = ['BPI Savings', 'Cash on Hand', 'Maya Time Deposit', 'Maya Credit Card']
+        for leg_acc in Account.objects.filter(user=user, name__in=legacy_names):
+            if not leg_acc.transactions_outgoing.exists() and not leg_acc.transactions_incoming.exists():
+                leg_acc.delete()
+
         accounts = {}
         for acc_info in account_defs:
             acc, created = Account.objects.get_or_create(
@@ -127,44 +233,20 @@ class Command(BaseCommand):
             # Update fields if it already existed
             if not created:
                 acc.account_type = acc_info['type']
-                if 'credit_limit' in acc_info:
-                    acc.credit_limit = acc_info['credit_limit']
-                if 'unbilled_amount' in acc_info:
-                    acc.unbilled_amount = acc_info['unbilled_amount']
-                if 'statement_day' in acc_info:
-                    acc.statement_day = acc_info['statement_day']
-                if 'due_day' in acc_info:
-                    acc.due_day = acc_info['due_day']
-                if 'interest_rate' in acc_info:
-                    acc.interest_rate = acc_info['interest_rate']
-                if 'maturity_date' in acc_info:
-                    acc.maturity_date = acc_info['maturity_date']
+                acc.currency = acc_info['curr']
+                acc.color_hex = acc_info['color']
+                acc.opening_balance = acc_info['balance']
+                acc.credit_limit = acc_info.get('credit_limit')
+                acc.unbilled_amount = acc_info.get('unbilled_amount', Decimal('0.00'))
+                acc.statement_day = acc_info.get('statement_day')
+                acc.due_day = acc_info.get('due_day')
+                acc.interest_rate = acc_info.get('interest_rate')
+                acc.maturity_date = acc_info.get('maturity_date')
                 acc.save()
             accounts[acc_info['name']] = acc
 
-        primary_acc = accounts['BPI Savings']
+        primary_acc = accounts['BDO Savings Account']
         maya_acc = accounts['Maya Wallet']
-
-        # 4. Clean up previous seeded loans/bills with matching titles to prevent duplicates
-        loan_titles = [
-            'SPayLater',
-            'SLoan 1',
-            'SLoan 2',
-            'Maya Loan',
-            'Appliance Loan (HC)',
-            'Apple MacBook Pro (HC)',
-            'Cash Loan (HC)',
-            'Atome Loan',
-            'Trustloan',
-            'Tiktok PayLater Bills',
-            'Billease',
-            'Cash Loan (CB)',
-            'Maya Credit Card Bills',
-            'Mari Credit Card Bills',
-            'Maya Easy Credit Bills',
-        ]
-        Debt.objects.filter(user=user, title__in=loan_titles).delete()
-        RecurringTransaction.objects.filter(user=user, description__in=loan_titles).delete()
 
         # 5. Define all Loans / Debts and Schedules
         debts_data = [
@@ -291,7 +373,7 @@ class Command(BaseCommand):
                 'start_date': date(2026, 10, 5),
                 'due_date': date(2027, 5, 5),
                 'next_due': date(2026, 11, 5),
-                'acc': maya_acc,
+                'acc': accounts['Atome'],
                 'notes': "7 Monthly installments of ₱4,427.11 due on the 5th (Until May 5, 2027).",
             },
             {
@@ -352,7 +434,7 @@ class Command(BaseCommand):
                 'notes': "₱5,260.00 every Friday for 1 year (52 weekly payments).",
             },
             {
-                'title': 'Maya Credit Card Bills',
+                'title': 'Maya Black Credit Card Bills',
                 'creditor': 'Maya Bank',
                 'principal': Decimal('28283.78'),
                 'min_payment': Decimal('28283.78'),
@@ -360,7 +442,7 @@ class Command(BaseCommand):
                 'start_date': date(2026, 10, 1),
                 'due_date': date(2026, 10, 30),
                 'next_due': date(2026, 10, 30),
-                'acc': accounts['Maya Credit Card'],
+                'acc': accounts['Maya Black Credit Card'],
                 'notes': "Credit card statement bill due October 30, 2026: ₱28,283.78.",
             },
             {
@@ -384,7 +466,7 @@ class Command(BaseCommand):
                 'start_date': date(2026, 10, 19),
                 'due_date': date(2026, 11, 19),
                 'next_due': date(2026, 11, 19),
-                'acc': maya_acc,
+                'acc': accounts['Maya Credit'],
                 'notes': "Maya Easy Credit revolving line bill due November 19, 2026: ₱5,915.34.",
             },
         ]
