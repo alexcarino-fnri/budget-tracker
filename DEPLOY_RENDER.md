@@ -177,6 +177,12 @@ If you require receipts to persist permanently across redeployments:
 
 To run periodic tasks or management commands, use the **Shell** tab in the Render Dashboard:
 
+### Seed Initial Loans & Debts
+```bash
+python manage.py seed_loans
+```
+*(Runs automatically when setting up the admin account on deploy).*
+
 ### Process Recurring Transactions
 ```bash
 python manage.py generate_recurring

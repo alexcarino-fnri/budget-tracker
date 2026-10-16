@@ -40,3 +40,12 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f"Superuser '{username}' created successfully."))
         else:
             self.stdout.write(self.style.SUCCESS(f"Superuser '{username}' password and permissions updated successfully."))
+
+        # Automatically seed initial loans and bills if requested or not yet seeded
+        seed_data = os.environ.get('SEED_INITIAL_DATA', 'True').lower() in ('true', '1', 't')
+        if seed_data:
+            from django.core.management import call_command
+            from debts.models import Debt
+            if not Debt.objects.filter(user=user).exists():
+                self.stdout.write(f"Seeding initial loans and monthly bills for {username}...")
+                call_command('seed_loans', username=username)
