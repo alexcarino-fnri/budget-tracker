@@ -35,8 +35,9 @@ env/
 *.sqlite3
 *.db
 
-# Media uploads (user receipts, etc.)
+# Media uploads (user receipts, etc.) & collected static files
 media/
+staticfiles/
 
 # IDE & OS
 .DS_Store

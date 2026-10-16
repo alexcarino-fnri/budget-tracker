@@ -148,3 +148,12 @@ python manage.py generate_recurring
 ├── static/            # CSS, PWA manifest, service worker & icons
 └── config/            # Django project settings & root URLs
 ```
+
+---
+
+## Cloud Deployment Guides
+
+Choose your preferred deployment platform:
+
+- 🚀 **[Deploy on Render (Recommended for Fast 1-Click Setup)](DEPLOY_RENDER.md)**: Zero-server setup with automated PostgreSQL, automatic SSL/TLS, and 1-click Blueprint (`render.yaml`).
+- 🏛️ **[Deploy on Oracle Cloud Infrastructure (OCI)](DEPLOY_ORACLE_CLOUD.md)**: Full production VPS deployment with Docker Compose, PostgreSQL 16, Nginx, and systemd on Always Free compute instances.
