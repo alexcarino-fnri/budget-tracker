@@ -4,13 +4,18 @@ from .models import Account
 class AccountForm(forms.ModelForm):
     class Meta:
         model = Account
-        fields = ('name', 'account_type', 'currency', 'opening_balance', 'color_hex', 'is_active')
+        fields = (
+            'name', 'account_type', 'currency', 'opening_balance', 'color_hex', 'is_active',
+            'credit_limit', 'unbilled_amount', 'statement_day', 'due_day',
+            'interest_rate', 'maturity_date'
+        )
         widgets = {
             'name': forms.TextInput(attrs={
                 'class': 'w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 outline-none transition',
-                'placeholder': 'e.g. BPI Savings, GCash, Physical Cash'
+                'placeholder': 'e.g. Maya Credit Card, BPI Savings, GCash'
             }),
             'account_type': forms.Select(attrs={
+                'id': 'id_account_type',
                 'class': 'w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 outline-none transition'
             }),
             'currency': forms.Select(attrs={
@@ -20,6 +25,37 @@ class AccountForm(forms.ModelForm):
                 'class': 'w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 outline-none transition',
                 'step': '0.01',
                 'placeholder': '0.00'
+            }),
+            'credit_limit': forms.NumberInput(attrs={
+                'class': 'w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 outline-none transition',
+                'step': '0.01',
+                'placeholder': 'e.g. 50000.00'
+            }),
+            'unbilled_amount': forms.NumberInput(attrs={
+                'class': 'w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 outline-none transition',
+                'step': '0.01',
+                'placeholder': '0.00'
+            }),
+            'statement_day': forms.NumberInput(attrs={
+                'class': 'w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 outline-none transition',
+                'min': '1',
+                'max': '31',
+                'placeholder': 'e.g. 15'
+            }),
+            'due_day': forms.NumberInput(attrs={
+                'class': 'w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 outline-none transition',
+                'min': '1',
+                'max': '31',
+                'placeholder': 'e.g. 5'
+            }),
+            'interest_rate': forms.NumberInput(attrs={
+                'class': 'w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 outline-none transition',
+                'step': '0.01',
+                'placeholder': 'e.g. 6.00'
+            }),
+            'maturity_date': forms.DateInput(attrs={
+                'type': 'date',
+                'class': 'w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 outline-none transition',
             }),
             'color_hex': forms.TextInput(attrs={
                 'type': 'color',

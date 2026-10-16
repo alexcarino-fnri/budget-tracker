@@ -39,12 +39,73 @@
             </div>
 
             <div>
-                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Opening Balance</label>
+                <label id="opening_balance_label" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Opening Balance</label>
                 {{ form.opening_balance }}
-                <p class="text-xs text-slate-400 mt-1">Starting amount before transactions are recorded.</p>
+                <p id="opening_balance_hint" class="text-xs text-slate-400 mt-1">Starting amount before transactions are recorded.</p>
                 {% if form.opening_balance.errors %}
                     <p class="text-xs text-rose-500 mt-1">{{ form.opening_balance.errors.0 }}</p>
                 {% endif %}
+            </div>
+
+            <!-- Credit Card Specific Section -->
+            <div id="credit_card_section" class="p-5 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50 space-y-4 transition-all">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="credit-card" class="w-4 h-4 text-indigo-500"></i>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-indigo-900 dark:text-indigo-300">Credit Card Tracking Details</h3>
+                </div>
+                <p class="text-xs text-indigo-600/80 dark:text-indigo-400/80">Track your total credit line, unbilled purchases, and billing cycles.</p>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">Total Credit Limit</label>
+                        {{ form.credit_limit }}
+                        <span class="text-[11px] text-slate-400 mt-1 block">Maximum approved credit line</span>
+                        {% if form.credit_limit.errors %}
+                            <p class="text-xs text-rose-500 mt-1">{{ form.credit_limit.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">Unbilled Charges</label>
+                        {{ form.unbilled_amount }}
+                        <span class="text-[11px] text-slate-400 mt-1 block">Purchases since last statement cutoff</span>
+                        {% if form.unbilled_amount.errors %}
+                            <p class="text-xs text-rose-500 mt-1">{{ form.unbilled_amount.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">Statement Cutoff Day</label>
+                        {{ form.statement_day }}
+                        <span class="text-[11px] text-slate-400 mt-1 block">Day of the month statement closes (1-31)</span>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">Payment Due Day</label>
+                        {{ form.due_day }}
+                        <span class="text-[11px] text-slate-400 mt-1 block">Day of the month bill is due (1-31)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Time Deposit / Savings Section -->
+            <div id="time_deposit_section" class="p-5 rounded-2xl bg-amber-50/60 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900/50 space-y-4 transition-all">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="lock" class="w-4 h-4 text-amber-500"></i>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-amber-900 dark:text-amber-300">Time Deposit & Yield Details</h3>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">Interest Rate (% p.a.)</label>
+                        {{ form.interest_rate }}
+                        <span class="text-[11px] text-slate-400 mt-1 block">Annual gross interest yield</span>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">Maturity Date</label>
+                        {{ form.maturity_date }}
+                        <span class="text-[11px] text-slate-400 mt-1 block">When the time deposit completes</span>
+                    </div>
+                </div>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center pt-2">
@@ -71,4 +132,39 @@
         </form>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const typeSelect = document.getElementById('id_account_type');
+        const ccSection = document.getElementById('credit_card_section');
+        const tdSection = document.getElementById('time_deposit_section');
+        const openingLabel = document.getElementById('opening_balance_label');
+        const openingHint = document.getElementById('opening_balance_hint');
+
+        function toggleSections() {
+            const val = typeSelect ? typeSelect.value : '';
+            if (val === 'CREDIT_CARD') {
+                if (ccSection) ccSection.style.display = 'block';
+                if (tdSection) tdSection.style.display = 'none';
+                if (openingLabel) openingLabel.textContent = 'Billed Statement Balance (Current Debt)';
+                if (openingHint) openingHint.textContent = 'Current billed balance due from your latest statement (e.g. ₱28,283.78).';
+            } else if (val === 'TIME_DEPOSIT') {
+                if (ccSection) ccSection.style.display = 'none';
+                if (tdSection) tdSection.style.display = 'block';
+                if (openingLabel) openingLabel.textContent = 'Principal Deposit Amount';
+                if (openingHint) openingHint.textContent = 'Initial deposit locked in the time deposit.';
+            } else {
+                if (ccSection) ccSection.style.display = 'none';
+                if (tdSection) tdSection.style.display = 'none';
+                if (openingLabel) openingLabel.textContent = 'Opening Balance';
+                if (openingHint) openingHint.textContent = 'Starting balance before transactions are recorded.';
+            }
+        }
+
+        if (typeSelect) {
+            typeSelect.addEventListener('change', toggleSections);
+            toggleSections();
+        }
+    });
+</script>
 {% endblock %}

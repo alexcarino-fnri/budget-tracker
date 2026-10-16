@@ -110,3 +110,61 @@ class WalletsTestCase(TestCase):
         self.assertEqual(detail_response.status_code, 200)
         self.assertContains(detail_response, '$ 2,500.00')
 
+    def test_credit_card_tracking_calculations(self):
+        # Create a credit card account
+        cc = Account.objects.create(
+            user=self.user_a,
+            name='Maya Black Card',
+            account_type=Account.TYPE_CREDIT_CARD,
+            currency='PHP',
+            opening_balance=Decimal('-20000.00'),  # Billed statement of 20k
+            credit_limit=Decimal('50000.00'),
+            unbilled_amount=Decimal('5000.00'),
+            statement_day=10,
+            due_day=30,
+        )
+
+        self.assertEqual(cc.billed_amount, Decimal('20000.00'))
+        self.assertEqual(cc.total_unbilled, Decimal('5000.00'))
+        self.assertEqual(cc.total_outstanding_credit, Decimal('25000.00'))
+        self.assertEqual(cc.remaining_credit, Decimal('25000.00'))
+        self.assertEqual(cc.credit_utilization, 50.0)
+        self.assertEqual(cc.credit_utilization_color, 'amber')
+
+        # Test view render
+        client = Client()
+        client.login(username='user_a', password='Password123!')
+        response = client.get(reverse('wallets:list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Maya Black Card')
+        self.assertContains(response, 'Total Credit Line')
+        self.assertContains(response, 'Remaining Credit')
+        self.assertContains(response, 'Unbilled Charges')
+
+    def test_account_creation_form_with_categories_and_credit_card(self):
+        client = Client()
+        client.login(username='user_a', password='Password123!')
+
+        post_data = {
+            'name': 'BDO Gold CC',
+            'account_type': Account.TYPE_CREDIT_CARD,
+            'currency': 'PHP',
+            'opening_balance': '0.00',
+            'credit_limit': '100000.00',
+            'unbilled_amount': '12500.00',
+            'statement_day': '15',
+            'due_day': '5',
+            'color_hex': '#6366f1',
+            'is_active': 'on',
+        }
+        response = client.post(reverse('wallets:create'), data=post_data)
+        self.assertEqual(response.status_code, 302)
+
+        created_cc = Account.objects.get(user=self.user_a, name='BDO Gold CC')
+        self.assertEqual(created_cc.account_type, Account.TYPE_CREDIT_CARD)
+        self.assertEqual(created_cc.credit_limit, Decimal('100000.00'))
+        self.assertEqual(created_cc.unbilled_amount, Decimal('12500.00'))
+        self.assertEqual(created_cc.statement_day, 15)
+        self.assertEqual(created_cc.due_day, 5)
+
+

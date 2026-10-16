@@ -13,30 +13,124 @@
                 <span>Back to Accounts</span>
             </a>
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold" style="background-color: {{ account.color_hex }};">
-                    {% if account.account_type == 'CASH' %}<i data-lucide="banknote" class="w-5 h-5"></i>
-                    {% elif account.account_type == 'BANK' %}<i data-lucide="landmark" class="w-5 h-5"></i>
-                    {% elif account.account_type == 'E_WALLET' %}<i data-lucide="smartphone" class="w-5 h-5"></i>
-                    {% elif account.account_type == 'CREDIT_CARD' %}<i data-lucide="credit-card" class="w-5 h-5"></i>
-                    {% else %}<i data-lucide="wallet" class="w-5 h-5"></i>{% endif %}
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-white font-bold shadow-md" style="background-color: {{ account.color_hex }};">
+                    <i data-lucide="{{ account.icon_name }}" class="w-6 h-6"></i>
                 </div>
                 <div>
                     <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">{{ account.name }}</h1>
-                    <span class="text-xs text-slate-400">{{ account.get_account_type_display }} &bull; {{ account.currency }}</span>
+                    <div class="flex items-center gap-2 mt-0.5">
+                        <span class="text-xs px-2.5 py-0.5 rounded-full font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                            {{ account.get_account_type_display }}
+                        </span>
+                        <span class="text-xs text-slate-400 font-mono">{{ account.currency }} ({{ account.currency_symbol }})</span>
+                    </div>
                 </div>
             </div>
         </div>
         <div class="flex items-center gap-2">
-            <a href="{% url 'wallets:update' account.pk %}" class="px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+            <a href="{% url 'wallets:update' account.pk %}" class="px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
                 Edit Account
             </a>
-            <a href="{% url 'transactions:create' %}?account={{ account.pk }}" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition">
+            <a href="{% url 'transactions:create' %}?account={{ account.pk }}" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-sm transition">
                 + New Transaction
             </a>
         </div>
     </div>
 
-    <!-- Balance stats -->
+    {% if account.is_credit_card %}
+    <!-- Specialized Credit Card Metrics Dashboard -->
+    <div class="bg-gradient-to-r from-slate-900 to-indigo-950 text-white border border-indigo-900/40 rounded-2xl p-6 shadow-md relative overflow-hidden">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-5">
+            <div>
+                <span class="text-xs font-semibold uppercase tracking-wider text-emerald-400">Remaining Credit</span>
+                <div class="mt-1 text-2xl sm:text-3xl font-extrabold font-mono text-emerald-400">
+                    {{ account.currency_symbol }} {{ account.remaining_credit|intcomma }}
+                </div>
+                <span class="text-xs text-slate-400">Available to spend</span>
+            </div>
+
+            <div>
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-300">Total Credit Limit</span>
+                <div class="mt-1 text-2xl sm:text-3xl font-bold font-mono text-white">
+                    {{ account.currency_symbol }} {{ account.credit_limit|intcomma }}
+                </div>
+                <span class="text-xs text-slate-400">Approved bank line</span>
+            </div>
+
+            <div>
+                <span class="text-xs font-semibold uppercase tracking-wider text-rose-300">Billed Statement</span>
+                <div class="mt-1 text-2xl sm:text-3xl font-bold font-mono text-rose-400">
+                    {{ account.currency_symbol }} {{ account.billed_amount|intcomma }}
+                </div>
+                <span class="text-xs text-slate-400">Due on statement</span>
+            </div>
+
+            <div>
+                <span class="text-xs font-semibold uppercase tracking-wider text-amber-300">Unbilled Charges</span>
+                <div class="mt-1 text-2xl sm:text-3xl font-bold font-mono text-amber-300">
+                    {{ account.currency_symbol }} {{ account.total_unbilled|intcomma }}
+                </div>
+                <span class="text-xs text-slate-400">Since last cutoff</span>
+            </div>
+        </div>
+
+        {% if account.credit_limit > 0 %}
+        <div class="mt-6 pt-5 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="flex items-center gap-3 text-xs">
+                <span class="text-slate-300">Total Outstanding: <strong class="text-white font-mono">{{ account.currency_symbol }} {{ account.total_outstanding_credit|intcomma }}</strong></span>
+                <span class="px-2.5 py-0.5 rounded-full font-bold {% if account.credit_utilization_color == 'emerald' %}bg-emerald-500/20 text-emerald-300{% elif account.credit_utilization_color == 'amber' %}bg-amber-500/20 text-amber-300{% else %}bg-rose-500/20 text-rose-300{% endif %}">
+                    {{ account.credit_utilization }}% Utilization
+                </span>
+            </div>
+            <div class="w-full sm:w-64 bg-slate-800 rounded-full h-2.5 overflow-hidden">
+                <div class="h-full rounded-full transition-all {% if account.credit_utilization_color == 'emerald' %}bg-emerald-500{% elif account.credit_utilization_color == 'amber' %}bg-amber-500{% else %}bg-rose-500{% endif %}" style="width: {{ account.credit_utilization }}%;"></div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if account.statement_day or account.due_day %}
+        <div class="mt-4 flex items-center gap-4 text-xs text-slate-300">
+            {% if account.statement_day %}
+            <span class="flex items-center gap-1.5">
+                <i data-lucide="calendar" class="w-4 h-4 text-slate-400"></i>
+                <span>Statement Cutoff: <strong>Day {{ account.statement_day }}</strong> of month</span>
+            </span>
+            {% endif %}
+            {% if account.due_day %}
+            <span class="flex items-center gap-1.5 text-rose-300">
+                <i data-lucide="clock" class="w-4 h-4"></i>
+                <span>Payment Due: <strong>Day {{ account.due_day }}</strong> of month</span>
+            </span>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    {% elif account.is_time_deposit %}
+    <!-- Time Deposit Metrics -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Deposit Balance</span>
+            <div class="mt-2 text-3xl font-bold font-mono text-emerald-600 dark:text-emerald-400">
+                {{ account.currency_symbol }} {{ current_balance|intcomma }}
+            </div>
+        </div>
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Annual Yield</span>
+            <div class="mt-2 text-3xl font-bold font-mono text-amber-500">
+                {{ account.interest_rate|default:"0.00" }}% p.a.
+            </div>
+        </div>
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Maturity Date</span>
+            <div class="mt-2 text-xl font-bold font-mono text-slate-900 dark:text-white">
+                {{ account.maturity_date|default:"Open-ended" }}
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- Standard Balance Stats -->
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
             <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Current Computed Balance</span>
@@ -51,10 +145,15 @@
             </div>
         </div>
     </div>
+    {% endif %}
 
     <!-- Transactions List -->
     <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
-        <h2 class="text-base font-semibold text-slate-900 dark:text-white mb-4">Recent Account Activity</h2>
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-base font-semibold text-slate-900 dark:text-white">Recent Account Activity</h2>
+            <span class="text-xs text-slate-400">Latest 30 records</span>
+        </div>
+
         {% if transactions %}
         <div class="divide-y divide-slate-100 dark:divide-slate-800">
             {% for tx in transactions %}
@@ -63,7 +162,7 @@
                     <div class="w-9 h-9 rounded-xl flex items-center justify-center 
                         {% if tx.transaction_type == 'INCOME' %}bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400
                         {% elif tx.transaction_type == 'EXPENSE' %}bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400
-                        {% else %}bg-brand-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400{% endif %}">
+                        {% else %}bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400{% endif %}">
                         {% if tx.transaction_type == 'INCOME' %}<i data-lucide="arrow-down-left" class="w-4 h-4"></i>
                         {% elif tx.transaction_type == 'EXPENSE' %}<i data-lucide="arrow-up-right" class="w-4 h-4"></i>
                         {% else %}<i data-lucide="arrow-left-right" class="w-4 h-4"></i>{% endif %}

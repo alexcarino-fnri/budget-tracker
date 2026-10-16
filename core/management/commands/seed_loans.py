@@ -43,29 +43,104 @@ class Command(BaseCommand):
         debt_cat = Category.objects.filter(user=user, name='Debt Payment').first()
         bills_cat = Category.objects.filter(user=user, name='Bills & Utilities').first() or debt_cat
 
-        # 3. Ensure Default Wallets / Accounts
+        # 3. Ensure Default Wallets / Accounts with Categories & Credit Card settings
         account_defs = [
-            ('Maya Wallet', 'E_WALLET', 'PHP', '#22c55e', Decimal('15000.00')),
-            ('GCash', 'E_WALLET', 'PHP', '#0284c7', Decimal('10000.00')),
-            ('BPI Savings', 'BANK', 'PHP', '#b91c1c', Decimal('50000.00')),
-            ('Cash on Hand', 'CASH', 'PHP', '#10b981', Decimal('5000.00')),
-            ('Maya Credit Card', 'CREDIT_CARD', 'PHP', '#6366f1', Decimal('0.00')),
-            ('Mari Credit Card', 'CREDIT_CARD', 'PHP', '#f97316', Decimal('0.00')),
+            {
+                'name': 'Maya Wallet',
+                'type': Account.TYPE_E_WALLET,
+                'curr': 'PHP',
+                'color': '#22c55e',
+                'balance': Decimal('15000.00'),
+            },
+            {
+                'name': 'GCash',
+                'type': Account.TYPE_E_WALLET,
+                'curr': 'PHP',
+                'color': '#0284c7',
+                'balance': Decimal('10000.00'),
+            },
+            {
+                'name': 'BPI Savings',
+                'type': Account.TYPE_SAVINGS,
+                'curr': 'PHP',
+                'color': '#b91c1c',
+                'balance': Decimal('50000.00'),
+            },
+            {
+                'name': 'Cash on Hand',
+                'type': Account.TYPE_CASH,
+                'curr': 'PHP',
+                'color': '#10b981',
+                'balance': Decimal('5000.00'),
+            },
+            {
+                'name': 'Maya Credit Card',
+                'type': Account.TYPE_CREDIT_CARD,
+                'curr': 'PHP',
+                'color': '#6366f1',
+                'balance': Decimal('-28283.78'),
+                'credit_limit': Decimal('50000.00'),
+                'unbilled_amount': Decimal('3250.00'),
+                'statement_day': 10,
+                'due_day': 30,
+            },
+            {
+                'name': 'Mari Credit Card',
+                'type': Account.TYPE_CREDIT_CARD,
+                'curr': 'PHP',
+                'color': '#f97316',
+                'balance': Decimal('-15242.48'),
+                'credit_limit': Decimal('40000.00'),
+                'unbilled_amount': Decimal('1850.00'),
+                'statement_day': 14,
+                'due_day': 4,
+            },
+            {
+                'name': 'Maya Time Deposit',
+                'type': Account.TYPE_TIME_DEPOSIT,
+                'curr': 'PHP',
+                'color': '#8b5cf6',
+                'balance': Decimal('25000.00'),
+                'interest_rate': Decimal('6.00'),
+                'maturity_date': date(2027, 4, 16),
+            },
         ]
         accounts = {}
-        for name, atype, curr, color, open_bal in account_defs:
-            acc, _ = Account.objects.get_or_create(
+        for acc_info in account_defs:
+            acc, created = Account.objects.get_or_create(
                 user=user,
-                name=name,
+                name=acc_info['name'],
                 defaults={
-                    'account_type': atype,
-                    'currency': curr,
-                    'color_hex': color,
-                    'opening_balance': open_bal,
+                    'account_type': acc_info['type'],
+                    'currency': acc_info['curr'],
+                    'color_hex': acc_info['color'],
+                    'opening_balance': acc_info['balance'],
                     'is_active': True,
+                    'credit_limit': acc_info.get('credit_limit'),
+                    'unbilled_amount': acc_info.get('unbilled_amount', Decimal('0.00')),
+                    'statement_day': acc_info.get('statement_day'),
+                    'due_day': acc_info.get('due_day'),
+                    'interest_rate': acc_info.get('interest_rate'),
+                    'maturity_date': acc_info.get('maturity_date'),
                 }
             )
-            accounts[name] = acc
+            # Update fields if it already existed
+            if not created:
+                acc.account_type = acc_info['type']
+                if 'credit_limit' in acc_info:
+                    acc.credit_limit = acc_info['credit_limit']
+                if 'unbilled_amount' in acc_info:
+                    acc.unbilled_amount = acc_info['unbilled_amount']
+                if 'statement_day' in acc_info:
+                    acc.statement_day = acc_info['statement_day']
+                if 'due_day' in acc_info:
+                    acc.due_day = acc_info['due_day']
+                if 'interest_rate' in acc_info:
+                    acc.interest_rate = acc_info['interest_rate']
+                if 'maturity_date' in acc_info:
+                    acc.maturity_date = acc_info['maturity_date']
+                acc.save()
+            accounts[acc_info['name']] = acc
 
         primary_acc = accounts['BPI Savings']
         maya_acc = accounts['Maya Wallet']

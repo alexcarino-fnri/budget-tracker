@@ -19,10 +19,23 @@ class AccountListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         summary = get_all_accounts_with_balances(self.request.user)
-        context['accounts_with_balances'] = summary['accounts']
+        selected_type = self.request.GET.get('type', 'ALL').upper()
+
+        if selected_type != 'ALL':
+            if selected_type == 'SAVINGS':
+                accounts_shown = [acc for acc in summary['accounts'] if acc.account_type in ('SAVINGS', 'BANK')]
+            else:
+                accounts_shown = [acc for acc in summary['accounts'] if acc.account_type == selected_type]
+        else:
+            accounts_shown = summary['accounts']
+
+        context['accounts_with_balances'] = accounts_shown
+        context['selected_type'] = selected_type
         context['total_assets'] = summary['total_assets']
         context['total_liabilities'] = summary['total_liabilities']
         context['net_balance'] = summary['net_balance']
+        context['credit_card_summary'] = summary['credit_card_summary']
+        context['category_counts'] = summary['category_counts']
 
         # Determine currency symbol for summary cards
         currencies = set(acc.currency for acc in summary['accounts'])
