@@ -103,19 +103,36 @@ Scroll down to the **Environment Variables** section and add the following keys:
 
 ---
 
-## 👤 Step 4: Create a Superuser / Admin Account
+## 👤 Step 4: Create an Admin / Superuser Account
 
-Once the web service is live, you can create your Django administrator account using Render's built-in web terminal:
+Since Render's interactive **Shell** tab is a paid feature, we have built-in **automatic superuser creation** directly into the build process using Environment Variables.
 
-1. In the Render Dashboard, navigate to your **Web Service** (`budget-tracker`).
-2. In the left navigation menu, click **Shell**.
-3. Click **Connect** to open a secure web terminal session into the running container.
-4. Run:
+### Method A: Free Tier (Zero-Terminal via Render Environment Variables)
+
+1. In your Render Dashboard, open your **Web Service** (`budget-tracker`).
+2. In the left navigation menu, click **Environment**.
+3. Click **Add Environment Variable** and add:
+   - **`DJANGO_SUPERUSER_USERNAME`**: Your desired admin username (e.g. `admin`)
+   - **`DJANGO_SUPERUSER_PASSWORD`**: A secure password (e.g. `MySecurePass2026!`)
+   - **`DJANGO_SUPERUSER_EMAIL`**: *(Optional)* Your email address (e.g. `admin@example.com`)
+4. Click **Save Changes**.
+5. Render will trigger a new build. During `./build.sh`, the app will automatically create your superuser account in PostgreSQL.
+6. Open your browser to `https://<your-app>.onrender.com/admin/` and log in with your credentials!
+
+> [!TIP]
+> If you ever need to reset your admin password on the free tier, simply update `DJANGO_SUPERUSER_PASSWORD` in the **Environment** tab and click **Save Changes**. Render will automatically update it on deploy.
+
+---
+
+### Method B: Paid Tier (Interactive Web Shell)
+
+If you have upgraded to a paid plan ($7/mo Starter):
+1. In your Web Service settings, click **Shell** in the left menu.
+2. Click **Connect** and run:
    ```bash
    python manage.py createsuperuser
    ```
-5. Follow the interactive prompts to enter a username, email, and password.
-6. Now you can visit `https://your-app.onrender.com/admin/` or `https://your-app.onrender.com/accounts/login/` and log in with your credentials.
+3. Follow the interactive prompts.
 
 ---
 
