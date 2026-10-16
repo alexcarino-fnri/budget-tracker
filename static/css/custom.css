@@ -3,6 +3,10 @@
     color-scheme: light dark;
 }
 
+[x-cloak] {
+    display: none !important;
+}
+
 /* Glassmorphism utility */
 .glass-card {
     background: rgba(255, 255, 255, 0.7);

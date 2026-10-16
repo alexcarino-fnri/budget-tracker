@@ -83,9 +83,187 @@
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col font-sans antialiased selection:bg-emerald-500 selection:text-white"
       hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
-      x-data="{ notifOpen: false, userMenuOpen: false }">
+      x-data="{ notifOpen: false, userMenuOpen: false, mobileMenuOpen: false }">
 
     {% if user.is_authenticated %}
+    <!-- Mobile Slide-Out Drawer Navigation -->
+    <div x-show="mobileMenuOpen" 
+         x-cloak
+         class="relative z-50 md:hidden" 
+         aria-modal="true" 
+         role="dialog">
+        <!-- Backdrop -->
+        <div x-show="mobileMenuOpen"
+             x-transition:enter="transition-opacity ease-linear duration-200"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition-opacity ease-linear duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             @click="mobileMenuOpen = false"
+             class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm"></div>
+
+        <!-- Slide-over Panel -->
+        <div class="fixed inset-0 flex">
+            <div x-show="mobileMenuOpen"
+                 x-transition:enter="transition ease-out duration-250 transform"
+                 x-transition:enter-start="-translate-x-full"
+                 x-transition:enter-end="translate-x-0"
+                 x-transition:leave="transition ease-in duration-200 transform"
+                 x-transition:leave-start="translate-x-0"
+                 x-transition:leave-end="-translate-x-full"
+                 class="relative flex w-full max-w-xs flex-1 flex-col bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 shadow-2xl pt-5 pb-6 overflow-y-auto">
+                
+                <!-- Close Button -->
+                <div class="absolute top-4 right-4">
+                    <button type="button" 
+                            @click="mobileMenuOpen = false" 
+                            class="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                            aria-label="Close menu">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <!-- Brand in Drawer -->
+                <div class="px-5 pb-4 border-b border-slate-100 dark:border-slate-800">
+                    <a href="{% url 'core:dashboard' %}" @click="mobileMenuOpen = false" class="flex items-center gap-3">
+                        <img src="{% static 'icons/pisoflow-icon.svg' %}" alt="PisoFlow" class="w-9 h-9 rounded-xl shadow-md shadow-emerald-500/20 object-contain" />
+                        <div>
+                            <h2 class="font-extrabold text-base leading-tight tracking-tight text-slate-900 dark:text-white">Piso<span class="text-emerald-500">Flow</span></h2>
+                            <span class="text-[10px] text-slate-400 font-medium">Smart Budget & Debt Tracker</span>
+                        </div>
+                    </a>
+
+                    <!-- User Pill -->
+                    <div class="mt-4 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs border border-emerald-500/30 shrink-0">
+                            {{ user.username|first|upper }}
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <p class="text-xs font-bold text-slate-900 dark:text-white truncate">{{ user.first_name|default:user.username }}</p>
+                            <p class="text-[10px] text-slate-400 truncate">{{ user.email|default:user.username }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation Links in Drawer -->
+                <div class="flex-1 px-3 py-4 space-y-1">
+                    <div class="px-3 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">Main Menu</div>
+                    
+                    <a href="{% url 'core:dashboard' %}" 
+                       @click="mobileMenuOpen = false"
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition {% if request.resolver_match.app_name == 'core' and request.resolver_match.url_name == 'dashboard' %}bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/50{% else %}text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800{% endif %}">
+                        <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                        <span>Dashboard</span>
+                    </a>
+
+                    <!-- Wallets & Accounts in Mobile Drawer -->
+                    <a href="{% url 'wallets:list' %}" 
+                       @click="mobileMenuOpen = false"
+                       class="flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold transition {% if request.resolver_match.app_name == 'wallets' %}bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/50{% else %}text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800{% endif %}">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="credit-card" class="w-4 h-4 text-emerald-500"></i>
+                            <span>Accounts & Wallets</span>
+                        </div>
+                        <span class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                            Cards & Cash
+                        </span>
+                    </a>
+
+                    <a href="{% url 'transactions:list' %}" 
+                       @click="mobileMenuOpen = false"
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition {% if request.resolver_match.app_name == 'transactions' and request.resolver_match.url_name != 'scan_receipt' and 'bills' not in request.path %}bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/50{% else %}text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800{% endif %}">
+                        <i data-lucide="arrow-left-right" class="w-4 h-4"></i>
+                        <span>Transactions</span>
+                    </a>
+
+                    <a href="{% url 'transactions:scan_receipt' %}" 
+                       @click="mobileMenuOpen = false"
+                       class="flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold transition {% if request.resolver_match.url_name == 'scan_receipt' %}bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/50{% else %}text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800{% endif %}">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="scan-line" class="w-4 h-4 text-emerald-500"></i>
+                            <span>Scan Receipt</span>
+                        </div>
+                        <span class="text-[10px] px-1.5 py-0.5 rounded-full font-bold bg-emerald-500/15 text-emerald-500">AI</span>
+                    </a>
+
+                    <div class="pt-3 pb-1.5 px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">Liabilities & Planning</div>
+
+                    <a href="{% url 'transactions:bills_list' %}" 
+                       @click="mobileMenuOpen = false"
+                       class="flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold transition {% if 'bills' in request.path %}bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 border border-indigo-200/50 dark:border-indigo-800/50{% else %}text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800{% endif %}">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="calendar-clock" class="w-4 h-4 text-indigo-500"></i>
+                            <span>Monthly Bills</span>
+                        </div>
+                        {% if bills_due_count > 0 %}
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30">
+                            {{ bills_due_count }}
+                        </span>
+                        {% endif %}
+                    </a>
+
+                    <a href="{% url 'debts:list' %}" 
+                       @click="mobileMenuOpen = false"
+                       class="flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold transition {% if request.resolver_match.app_name == 'debts' %}bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/50{% else %}text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800{% endif %}">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="scale" class="w-4 h-4 text-amber-500"></i>
+                            <span>Debt Tracker</span>
+                        </div>
+                        {% if debts_due_count > 0 %}
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-500 border border-amber-500/30">
+                            {{ debts_due_count }}
+                        </span>
+                        {% endif %}
+                    </a>
+
+                    <a href="{% url 'budgets:list' %}" 
+                       @click="mobileMenuOpen = false"
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition {% if request.resolver_match.app_name == 'budgets' %}bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/50{% else %}text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800{% endif %}">
+                        <i data-lucide="pie-chart" class="w-4 h-4"></i>
+                        <span>Budgets & Goals</span>
+                    </a>
+
+                    <a href="{% url 'reports:summary' %}" 
+                       @click="mobileMenuOpen = false"
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition {% if request.resolver_match.app_name == 'reports' %}bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/50{% else %}text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800{% endif %}">
+                        <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+                        <span>Reports & Export</span>
+                    </a>
+
+                    <div class="pt-3 pb-1.5 px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">Settings</div>
+
+                    <a href="{% url 'accounts:profile' %}" 
+                       @click="mobileMenuOpen = false"
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition {% if request.resolver_match.app_name == 'accounts' %}bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/50{% else %}text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800{% endif %}">
+                        <i data-lucide="user-cog" class="w-4 h-4"></i>
+                        <span>Profile & Preferences</span>
+                    </a>
+                </div>
+
+                <!-- Drawer Footer Actions -->
+                <div class="px-4 pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
+                    <button onclick="toggleTheme()" class="w-full py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold transition flex items-center justify-between">
+                        <span class="flex items-center gap-2">
+                            <i data-lucide="sun" class="w-4 h-4 hidden dark:block"></i>
+                            <i data-lucide="moon" class="w-4 h-4 block dark:hidden"></i>
+                            <span>Switch Theme</span>
+                        </span>
+                        <span class="text-[11px] text-slate-400">Theme</span>
+                    </button>
+
+                    <form method="post" action="{% url 'accounts:logout' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="w-full py-2.5 px-3 rounded-xl border border-rose-200 dark:border-rose-900/50 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-xs font-semibold transition flex items-center justify-center gap-2">
+                            <i data-lucide="log-out" class="w-4 h-4"></i>
+                            <span>Sign Out</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="flex min-h-screen">
         <!-- Desktop Sidebar -->
         <aside class="hidden md:flex flex-col w-64 border-r border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 h-screen z-30 transition-colors">
@@ -183,11 +361,19 @@
         <div class="flex-1 flex flex-col min-w-0 pb-20 md:pb-8">
             <!-- Top App Bar (Header for both Desktop & Mobile) -->
             <header class="flex items-center justify-between px-4 sm:px-6 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md sticky top-0 z-40">
-                <!-- Mobile brand (visible only on mobile) -->
-                <a href="{% url 'core:dashboard' %}" class="md:hidden flex items-center gap-2">
-                    <img src="{% static 'icons/pisoflow-icon.svg' %}" alt="PisoFlow" class="w-8 h-8 rounded-xl shadow-sm object-contain" />
-                    <span class="font-extrabold text-base tracking-tight text-slate-900 dark:text-white">Piso<span class="text-emerald-500">Flow</span></span>
-                </a>
+                <!-- Mobile Brand + Menu Trigger -->
+                <div class="flex items-center gap-2.5 md:hidden">
+                    <button type="button" 
+                            @click="mobileMenuOpen = true; $nextTick(() => { if (window.lucide) lucide.createIcons(); })" 
+                            class="p-2 -ml-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition active:scale-95"
+                            aria-label="Open Navigation Menu">
+                        <i data-lucide="menu" class="w-5 h-5"></i>
+                    </button>
+                    <a href="{% url 'core:dashboard' %}" class="flex items-center gap-2">
+                        <img src="{% static 'icons/pisoflow-icon.svg' %}" alt="PisoFlow" class="w-8 h-8 rounded-xl shadow-sm object-contain" />
+                        <span class="font-extrabold text-base tracking-tight text-slate-900 dark:text-white">Piso<span class="text-emerald-500">Flow</span></span>
+                    </a>
+                </div>
 
                 <!-- Left placeholder for flex spacing on desktop -->
                 <div class="hidden md:block"></div>
@@ -401,13 +587,17 @@
 
         <!-- Mobile Bottom Navigation Bar -->
         <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 px-2 py-1.5 flex items-center justify-around shadow-lg">
-            <a href="{% url 'core:dashboard' %}" class="flex flex-col items-center py-1 px-2 text-xs font-medium transition {% if request.resolver_match.app_name == 'core' and request.resolver_match.url_name == 'dashboard' %}text-emerald-600 dark:text-emerald-400{% else %}text-slate-400 hover:text-slate-600 dark:hover:text-slate-300{% endif %}">
+            <a href="{% url 'core:dashboard' %}" 
+               class="flex flex-col items-center py-1 px-2 text-[11px] font-medium transition {% if request.resolver_match.app_name == 'core' and request.resolver_match.url_name == 'dashboard' %}text-emerald-600 dark:text-emerald-400 font-semibold{% else %}text-slate-400 hover:text-slate-600 dark:hover:text-slate-300{% endif %}">
                 <i data-lucide="layout-dashboard" class="w-5 h-5 mb-0.5"></i>
                 <span>Home</span>
             </a>
-            <a href="{% url 'transactions:list' %}" class="flex flex-col items-center py-1 px-2 text-xs font-medium transition {% if request.resolver_match.app_name == 'transactions' %}text-emerald-600 dark:text-emerald-400{% else %}text-slate-400 hover:text-slate-600 dark:hover:text-slate-300{% endif %}">
-                <i data-lucide="arrow-left-right" class="w-5 h-5 mb-0.5"></i>
-                <span>Activity</span>
+
+            <!-- Mobile Wallets Tab (Now prominently accessible on mobile!) -->
+            <a href="{% url 'wallets:list' %}" 
+               class="flex flex-col items-center py-1 px-2 text-[11px] font-medium transition {% if request.resolver_match.app_name == 'wallets' %}text-emerald-600 dark:text-emerald-400 font-semibold{% else %}text-slate-400 hover:text-slate-600 dark:hover:text-slate-300{% endif %}">
+                <i data-lucide="credit-card" class="w-5 h-5 mb-0.5"></i>
+                <span>Wallets</span>
             </a>
             
             <!-- Mobile Quick Add Floating Center Button -->
@@ -415,19 +605,29 @@
                 <i data-lucide="plus" class="w-6 h-6"></i>
             </a>
 
-            <a href="{% url 'budgets:list' %}" class="flex flex-col items-center py-1 px-2 text-xs font-medium transition {% if request.resolver_match.app_name == 'budgets' %}text-emerald-600 dark:text-emerald-400{% else %}text-slate-400 hover:text-slate-600 dark:hover:text-slate-300{% endif %}">
-                <i data-lucide="pie-chart" class="w-5 h-5 mb-0.5"></i>
-                <span>Budgets</span>
-            </a>
-            <a href="{% url 'debts:list' %}" class="flex flex-col items-center py-1 px-2 text-xs font-medium transition {% if request.resolver_match.app_name == 'debts' %}text-emerald-600 dark:text-emerald-400{% else %}text-slate-400 hover:text-slate-600 dark:hover:text-slate-300{% endif %}">
+            <a href="{% url 'debts:list' %}" 
+               class="flex flex-col items-center py-1 px-2 text-[11px] font-medium transition {% if request.resolver_match.app_name == 'debts' or 'bills' in request.path %}text-emerald-600 dark:text-emerald-400 font-semibold{% else %}text-slate-400 hover:text-slate-600 dark:hover:text-slate-300{% endif %}">
                 <div class="relative">
                     <i data-lucide="scale" class="w-5 h-5 mb-0.5"></i>
-                    {% if urgent_notifications_count > 0 %}
+                    {% if debts_due_count > 0 or bills_due_count > 0 %}
                     <span class="absolute -top-1 -right-2 w-2.5 h-2.5 rounded-full bg-amber-500"></span>
                     {% endif %}
                 </div>
                 <span>Debts</span>
             </a>
+
+            <!-- Mobile More / Menu Trigger -->
+            <button type="button" 
+                    @click="mobileMenuOpen = true; $nextTick(() => { if (window.lucide) lucide.createIcons(); })" 
+                    class="flex flex-col items-center py-1 px-2 text-[11px] font-medium transition text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 relative">
+                <div class="relative">
+                    <i data-lucide="menu" class="w-5 h-5 mb-0.5"></i>
+                    {% if urgent_notifications_count > 0 %}
+                    <span class="absolute -top-0.5 -right-1 w-2 h-2 rounded-full bg-rose-500"></span>
+                    {% endif %}
+                </div>
+                <span>Menu</span>
+            </button>
         </nav>
     </div>
     {% else %}
